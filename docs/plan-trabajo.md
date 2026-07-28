@@ -10,7 +10,7 @@
 |---|------|---------|---------------|
 | **P1** | Base de Datos | DDL + seed + ajustes schema | `database/schema.sql`, `database/seed.sql` |
 | **P2** | Base de Datos | PL/SQL + consultas + pruebas | `database/procedures.sql`, `database/consultas.sql` |
-| **P3** | Backend | Capa de datos (queries + servicios) | `backend/db/`, `backend/services/` |
+| **P3** | Backend | Capa de datos (queries + servicios + modelo) | `backend/db/`, `backend/services/`, `backend/models/` |
 | **P4** | Backend | Rutas Flask + app principal | `backend/app.py`, `backend/routes/` |
 | **P5** | Frontend | Auth + usuario + admin | `frontend/templates/auth/`, `usuario/`, `admin/` |
 | **P6** | Frontend | Tutor + servicios + reuniones | `frontend/templates/tutor/`, `servicios/`, `reuniones/` |
@@ -22,17 +22,21 @@
 ### Completado
 
 - [x] Schema DDL con 10 tablas, FK, CHECK, UNIQUE (P1)
-- [x] Seed data: 123 usuarios, 15 materias, 20 tutores, 30 servicios, 1050 reuniones, 80 resenas, 15 baneos, 150+ movimientos token (P1)
+- [x] Seed data: 124 usuarios, 15 materias, 20 tutores, 30 servicios, 1051 reuniones, 80 resenas, 15 baneos, 150+ movimientos token (P1)
 - [x] 2 funciones: `fn_verificar_saldo_estudiante`, `fn_es_usuario_baneado` (P2)
 - [x] 2 procedimientos: `pr_agendar_tutoria`, `pr_asignar_datos_usuario` (P2)
 - [x] 2 triggers: `Trg_actualizar_calificacion_tutor`, `Trg_reserva_cancelada` (P2)
 - [x] Bateria de 16 consultas N1-N6 + 2 vistas (P2)
+- [x] Capa de datos P3: conexion, queries, servicios, modelo User, doc P4 (P3)
+- [x] Test de integracion P3: 24/24 pruebas OK (`backend/test_p3.py`) (P3)
 
 ### Pendiente — Backend (P3 + P4)
 
-- [ ] Conexion Flask → MySQL (`backend/db/connection.py`)
-- [ ] Funciones de queries que llaman SPs y consultas
-- [ ] Servicios: `tokens.py` (saldo, transferencias), `validaciones.py` (baneos, prerrequisitos)
+- [x] Conexion Flask → MySQL (`backend/db/connection.py`) — P3
+- [x] Funciones de queries que llaman SPs y consultas — P3
+- [x] Servicios: `tokens.py` (saldo, transferencias), `validaciones.py` (baneos, prerrequisitos) — P3
+- [x] Modelo User para Flask-Login (`backend/models/user.py`) — P3
+- [x] Documentacion de capa de datos para P4 (`backend/documentacion-p4.md`) — P3
 - [ ] Ruta `auth.py`: registro con `pr_asignar_datos_usuario`, login, logout
 - [ ] Ruta `usuario.py`: dashboard (saldo, proximas reuniones, perfil)
 - [ ] Ruta `tutor.py`: postular, crear servicio, mis servicios
@@ -112,10 +116,12 @@ Cada funcionalidad sigue esta cadena: **DB lista → queries → ruta → templa
 - [ ] Agregar SPs adicionales si el backend los necesita
 
 ### P3 (Backend — Capa de datos)
-- [ ] `connection.py` conecta a MySQL sin errores
-- [ ] Cada funcion en `queries.py` ejecuta la consulta/sp correcta
-- [ ] `tokens.py` calcula saldos con los datos de seed
-- [ ] `validaciones.py` detecta baneos activos correctamente
+- [x] `connection.py` conecta a MySQL sin errores
+- [x] Cada funcion en `queries.py` ejecuta la consulta/sp correcta
+- [x] `tokens.py` calcula saldos con los datos de seed
+- [x] `validaciones.py` detecta baneos activos correctamente
+- [x] `models/user.py` — modelo User para Flask-Login (`UserMixin`)
+- [x] `documentacion-p4.md` — guia completa de uso para P4
 
 ### P4 (Backend — Rutas Flask)
 - [ ] `python backend/app.py` levanta sin errores
