@@ -76,3 +76,29 @@ BEGIN
 END$$
 DELIMITER ;
 
+-- Trigger 4 : Valida que el tutor si tenga inscrita esa materia como aprobada y apta 
+USE u_linker;
+
+DELIMITER $$
+
+DROP TRIGGER IF EXISTS trg_validar_servicio $$
+
+CREATE TRIGGER trg_validar_servicio
+BEFORE INSERT ON servicio
+FOR EACH ROW
+BEGIN
+    DECLARE v_existe INT;
+
+    SELECT COUNT(*)
+    INTO v_existe
+    FROM materia_aprobada_tutor
+    WHERE id_tutor = NEW.id_tutor -- cuenta si coinciden las materias y los tutores 
+      AND id_materia = NEW.id_materia;
+
+    IF v_existe = 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'El tutor no tiene registrada esa materia como aprobada.';
+    END IF;
+END $$
+
+DELIMITER ;
