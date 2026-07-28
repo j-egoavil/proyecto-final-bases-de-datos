@@ -1,0 +1,104 @@
+-- -------------------------------------------------------------------
+--  TRIGGERS
+-- -------------------------------------------------------------------
+
+USE u_linker;
+-- Trigger 1: Trg_actualizar_calificacion_tutor
+DELIMITER $$
+
+DROP TRIGGER IF EXISTS u_linker.Trg_actualizar_calificacion_tutor$$
+
+CREATE TRIGGER u_linker.Trg_actualizar_calificacion_tutor
+AFTER INSERT ON u_linker.resena
+FOR EACH ROW
+BEGIN
+    DECLARE v_promedio FLOAT;
+
+    SELECT AVG(calificacion) INTO v_promedio
+    FROM u_linker.resena
+    WHERE id_tutor = NEW.id_tutor;
+
+    UPDATE u_linker.tutor
+    SET calif_promedio = IFNULL(v_promedio, 0.0)
+    WHERE id_tutor = NEW.id_tutor;
+END$$
+
+DELIMITER ;
+
+-- Trigger 2: Trg_reserva_cancelada (reembolso si se cancela con >24h de anticipacion)
+DELIMITER $$
+
+DROP TRIGGER IF EXISTS u_linker.Trg_reserva_cancelada$$
+
+CREATE TRIGGER u_linker.Trg_reserva_cancelada
+AFTER UPDATE ON u_linker.reunion
+FOR EACH ROW
+BEGIN
+    DECLARE v_horas_diferencia INT;
+    DECLARE v_fecha_inicio_reunion DATETIME;
+
+    IF OLD.estado <> 'Cancelada' AND NEW.estado = 'Cancelada' THEN
+        SET v_fecha_inicio_reunion = CAST(CONCAT(NEW.fecha, ' ', NEW.hora_inicio) AS DATETIME);
+        SET v_horas_diferencia = TIMESTAMPDIFF(HOUR, NOW(), v_fecha_inicio_reunion);
+
+        IF v_horas_diferencia >= 24 THEN
+            -- Reembolso al estudiante
+            UPDATE u_linker.usuario
+            SET saldo_tokens = saldo_tokens + NEW.tokens_cobrados
+            WHERE id_usuario = NEW.id_estudiante;
+
+            UPDATE u_linker.usuario
+            SET saldo_tokens = saldo_tokens - NEW.tokens_cobrados
+            WHERE id_usuario = NEW.id_tutor;
+
+            INSERT INTO u_linker.movimiento_token (id_usuario, cantidad, fecha)
+            VALUES (NEW.id_estudiante, NEW.tokens_cobrados, NOW());
+        END IF;
+    END IF;
+END$$
+
+DELIMITER ;
+
+-- Trigger 3 : Validamos que la materia solo se pueda ingresar con nota suficiente
+USE u_linker;
+
+DELIMITER $$
+DROP TRIGGER IF EXISTS trg_validar_materia_tutor $$
+CREATE TRIGGER trg_validar_materia_tutor
+BEFORE INSERT ON materia_aprobada_tutor
+FOR EACH ROW
+BEGIN
+    IF new.nota < 4.1 THEN 
+		SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'No se puede ser tutor de una materia si la nota es menor a 4.1';
+    END IF;    
+    
+END$$
+DELIMITER ;
+
+-- Trigger 4 : Valida que el tutor si tenga inscrita esa materia como aprobada y apta 
+USE u_linker;
+
+DELIMITER $$
+
+DROP TRIGGER IF EXISTS trg_validar_servicio $$
+
+CREATE TRIGGER trg_validar_servicio
+BEFORE INSERT ON servicio
+FOR EACH ROW
+BEGIN
+    DECLARE v_existe INT;
+
+    SELECT COUNT(*)
+    INTO v_existe
+    FROM materia_aprobada_tutor
+    WHERE id_tutor = NEW.id_tutor -- cuenta si coinciden las materias y los tutores 
+      AND id_materia = NEW.id_materia;
+
+    IF v_existe = 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'El tutor no tiene registrada esa materia como aprobada.';
+    END IF;
+END $$
+
+DELIMITER ;
