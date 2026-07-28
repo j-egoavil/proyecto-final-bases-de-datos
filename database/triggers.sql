@@ -59,4 +59,20 @@ END$$
 
 DELIMITER ;
 
+-- Trigger 3 : Validamos que la materia solo se pueda ingresar con nota suficiente
+USE u_linker;
+
+DELIMITER $$
+DROP TRIGGER IF EXISTS trg_validar_materia_tutor $$
+CREATE TRIGGER trg_validar_materia_tutor
+BEFORE INSERT ON materia_aprobada_tutor
+FOR EACH ROW
+BEGIN
+    IF new.nota < 4.1 THEN 
+		SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'No se puede ser tutor de una materia si la nota es menor a 4.1';
+    END IF;    
+    
+END$$
+DELIMITER ;
 

@@ -1,4 +1,4 @@
-USE u_linker;
+pgit log -1 --pretty=fullKLUSE u_linker;
 
 -- -------------------------------------------------------------------
 -- PROCEDIMIENTOS ALMACENADOS
