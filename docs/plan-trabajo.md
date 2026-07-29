@@ -38,15 +38,15 @@
 - [x] Modelo User para Flask-Login (`backend/models/user.py`) — P3
 - [x] Documentacion de capa de datos para P4 (`backend/documentacion-p4.md`) — P3
 - [x] Ruta `auth.py`: registro con `pr_asignar_datos_usuario`, login, logout
-- [ ] Ruta `usuario.py`: dashboard (saldo, proximas reuniones, perfil)
-- [ ] Ruta `tutor.py`: postular, crear servicio, mis servicios
+- [x] Ruta `usuario.py`: dashboard (saldo, proximas reuniones, perfil)
+- [x] Ruta `tutor.py`: postular, crear servicio, mis servicios
 - [x] Ruta `servicios.py`: buscar, detalle, agendar con `pr_agendar_tutoria`
 - [x] Ruta `reuniones.py`: mis reuniones, cancelar, finalizar
 - [x] Ruta `admin.py`: dashboard, baneos, metricas
 
 ### Pendiente — Frontend (P5 + P6)
 
-- [ ] `base.html` — layout con navbar (segun rol), muestra saldo tokens
+- [x] `base.html` — layout con navbar (segun rol), muestra saldo tokens
 - [x] `auth/login.html` + `registro.html`
 - [ ] `usuario/dashboard.html` — tarjeta de saldo, reuniones pendientes
 - [ ] `usuario/perfil.html` — datos, historial
