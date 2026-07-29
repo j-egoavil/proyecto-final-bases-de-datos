@@ -1,5 +1,7 @@
 from flask import Flask
 from backend.config import SECRET_KEY, DEBUG
+from backend.routes.auth import auth_bp
+from backend.routes.servicios import servicios_bp
 
 app = Flask(
     __name__,
@@ -7,6 +9,9 @@ app = Flask(
     static_folder="../frontend/static",
 )
 app.secret_key = SECRET_KEY
+
+app.register_blueprint(auth_bp, url_prefix="/auth")
+app.register_blueprint(servicios_bp, url_prefix="/servicios")
 
 
 @app.route("/")
