@@ -102,3 +102,91 @@ BEGIN
 END $$
 
 DELIMITER ;
+
+-- Trigger 5: trg_validar_baneo_reunion (RN-05 a nivel de tabla, redundante con pr_agendar_tutoria)
+USE u_linker;
+
+DELIMITER $$
+
+DROP TRIGGER IF EXISTS trg_validar_baneo_reunion$$
+
+CREATE TRIGGER trg_validar_baneo_reunion
+BEFORE INSERT ON reunion
+FOR EACH ROW
+BEGIN
+    IF u_linker.fn_es_usuario_baneado(NEW.id_estudiante, NEW.fecha) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'El estudiante tiene una sancion activa en la fecha seleccionada.';
+    END IF;
+
+    IF u_linker.fn_es_usuario_baneado(NEW.id_tutor, NEW.fecha) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'El tutor tiene una sancion activa en la fecha seleccionada.';
+    END IF;
+END$$
+
+DELIMITER ;
+
+-- Trigger 6: trg_validar_baneo_servicio (RN-05 a nivel de tabla, mismo caso de redundancia)
+USE u_linker;
+
+DELIMITER $$
+
+DROP TRIGGER IF EXISTS trg_validar_baneo_servicio$$
+
+CREATE TRIGGER trg_validar_baneo_servicio
+BEFORE INSERT ON servicio
+FOR EACH ROW
+BEGIN
+    IF u_linker.fn_es_usuario_baneado(NEW.id_tutor, CURDATE()) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'El tutor tiene una sancion activa y no puede publicar servicios.';
+    END IF;
+END$$
+
+DELIMITER ;
+
+-- Trigger 7: trg_control_saldo (RN-03 a nivel de tabla, redundante con pr_agendar_tutoria)
+USE u_linker;
+
+DELIMITER $$
+
+DROP TRIGGER IF EXISTS trg_control_saldo$$
+
+CREATE TRIGGER trg_control_saldo
+BEFORE INSERT ON reunion
+FOR EACH ROW
+BEGIN
+    IF NOT u_linker.fn_verificar_saldo_estudiante(NEW.id_estudiante, NEW.id_servicio) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'El estudiante no tiene suficientes tokens para este servicio.';
+    END IF;
+END$$
+
+DELIMITER ;
+
+-- Trigger 8
+USE u_linker;
+
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS sp_saldo_tokens$$
+
+CREATE PROCEDURE sp_saldo_tokens(
+    IN p_usuario_id INT,
+    OUT p_saldo_usuario INT
+)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        SET p_saldo_usuario = NULL;
+    END;
+
+    SELECT IFNULL(SUM(cantidad), 0)
+    INTO p_saldo_usuario
+    FROM movimiento_token
+    WHERE id_usuario = p_usuario_id;
+
+END$$
+
+DELIMITER ;
