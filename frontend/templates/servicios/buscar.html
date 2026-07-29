@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Buscar servicios{% endblock %}
+{% block content %}
+
+<h2 class="mb-4">Buscar servicios de tutoría</h2>
+
+<form method="GET" action="{{ url_for('servicios.buscar') }}" class="row g-3 mb-4">
+    <div class="col-md-4">
+        <label class="form-label">Materia</label>
+        <select name="id_materia" class="form-select">
+            <option value="">Todas</option>
+            {% for materia in materias %}
+                <option value="{{ materia.id_materia }}"
+                    {% if filtros.id_materia == materia.id_materia %}selected{% endif %}>
+                    {{ materia.nombre }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="col-md-4">
+        <label class="form-label">Modalidad</label>
+        <select name="modalidad" class="form-select">
+            <option value="">Todas</option>
+            {% for m in ["Virtual", "Presencial", "Híbrido"] %}
+                <option value="{{ m }}" {% if filtros.modalidad == m %}selected{% endif %}>{{ m }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="col-md-4">
+        <label class="form-label">Precio máximo (tokens)</label>
+        <input type="number" name="precio_max" class="form-control"
+               value="{{ filtros.precio_max or '' }}" min="1">
+    </div>
+
+    <div class="col-12">
+        <button type="submit" class="btn btn-primary">Filtrar</button>
+        <a href="{{ url_for('servicios.buscar') }}" class="btn btn-outline-secondary">Limpiar</a>
+    </div>
+</form>
+
+<div class="row row-cols-1 row-cols-md-3 g-4">
+    {% for s in servicios %}
+    <div class="col">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">{{ s.nombre }}</h5>
+                <h6 class="card-subtitle mb-2 text-muted">{{ s.materia_nombre }}</h6>
+                <p class="card-text">
+                    Tutor: {{ s.tutor_nombre }}<br>
+                    Modalidad: {{ s.modalidad }}<br>
+                    Calificación: {{ "%.1f"|format(s.calif_promedio) }} / 5
+                </p>
+                <span class="badge bg-success">{{ s.precio_tokens }} tokens</span>
+            </div>
+            <div class="card-footer">
+                <a href="{{ url_for('servicios.detalle', id_servicio=s.id_servicio) }}"
+                   class="btn btn-sm btn-outline-primary w-100">Ver detalle</a>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <p class="text-muted">No se encontraron servicios con esos filtros.</p>
+    {% endfor %}
+</div>
+
+{% endblock %}

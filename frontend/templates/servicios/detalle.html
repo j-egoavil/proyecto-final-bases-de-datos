@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}{{ servicio.nombre }}{% endblock %}
+{% block content %}
+
+<a href="{{ url_for('servicios.buscar') }}" class="btn btn-sm btn-outline-secondary mb-3">← Volver</a>
+
+<div class="card">
+    <div class="card-body">
+        <h2 class="card-title">{{ servicio.nombre }}</h2>
+        <h5 class="card-subtitle mb-3 text-muted">{{ servicio.materia_nombre }}</h5>
+
+        <p>{{ servicio.descripcion or "Sin descripción adicional." }}</p>
+
+        <ul class="list-group list-group-flush mb-3">
+            <li class="list-group-item">Tutor: {{ servicio.tutor_nombre }}</li>
+            <li class="list-group-item">Modalidad: {{ servicio.modalidad }}</li>
+            <li class="list-group-item">Calificación del tutor: {{ "%.1f"|format(servicio.calif_promedio) }} / 5</li>
+            <li class="list-group-item">Precio: {{ servicio.precio_tokens }} tokens</li>
+        </ul>
+
+        {% if servicio.tutor_descripcion %}
+        <p class="text-muted">Sobre el tutor: {{ servicio.tutor_descripcion }}</p>
+        {% endif %}
+
+        {% if session.get('id_usuario') %}
+            <form method="POST" action="{{ url_for('servicios.agendar', id_servicio=servicio.id_servicio) }}" class="row g-2 mt-3">
+                <div class="col-md-4">
+                    <label class="form-label">Fecha</label>
+                    <input type="date" name="fecha" class="form-control" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Hora inicio</label>
+                    <input type="time" name="hora_inicio" class="form-control" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Hora fin</label>
+                    <input type="time" name="hora_fin" class="form-control" required>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">Agendar</button>
+                </div>
+            </form>
+        {% else %}
+            <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary mt-3">
+                Inicia sesión para agendar
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

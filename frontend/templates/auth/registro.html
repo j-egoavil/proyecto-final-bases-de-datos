@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Crear cuenta{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <h2 class="mb-4">Crear cuenta</h2>
+        <form method="POST" action="{{ url_for('auth.registro') }}">
+            <div class="mb-3">
+                <label class="form-label">Nombre completo</label>
+                <input type="text" name="nombre" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input type="email" name="email" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Contraseña</label>
+                <input type="password" name="password" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Área</label>
+                <select name="area" class="form-select" required>
+                    <option value="Ing. Sistemas">Ing. Sistemas</option>
+                    <option value="Ing. Industrial">Ing. Industrial</option>
+                    <option value="Ing. Civil">Ing. Civil</option>
+                    <option value="Ing. Mecánica">Ing. Mecánica</option>
+                    <option value="Ing. Mecatrónica">Ing. Mecatrónica</option>
+                    <option value="Ing. Electrónica">Ing. Electrónica</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Semestre</label>
+                <input type="number" name="semestre" class="form-control" min="1" max="12" required>
+            </div>
+            <button type="submit" class="btn btn-success w-100">Registrarme</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

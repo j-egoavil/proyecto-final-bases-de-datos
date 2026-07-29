@@ -1,7 +1,10 @@
-from flask import Blueprint, render_template, request
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash
+import mysql.connector
 
 from backend.db.connection import get_db, close_db
-from backend.db.queries import obtener_servicios, obtener_materias, obtener_servicio_por_id
+from backend.db.queries import (
+    obtener_servicios, obtener_materias, obtener_servicio_por_id, agendar_reunion,
+)
 
 servicios_bp = Blueprint("servicios", __name__)
 
@@ -36,5 +39,36 @@ def detalle(id_servicio):
         servicio = obtener_servicio_por_id(conn, id_servicio)
     finally:
         close_db(conn)
-
     return render_template("servicios/detalle.html", servicio=servicio)
+
+
+@servicios_bp.route("/<int:id_servicio>/agendar", methods=["POST"])
+def agendar(id_servicio):
+    if not session.get("id_usuario"):
+        flash("Debes iniciar sesión para agendar", "error")
+        return redirect(url_for("auth.login"))
+
+    fecha = request.form.get("fecha")
+    hora_inicio = request.form.get("hora_inicio")
+    hora_fin = request.form.get("hora_fin")
+
+    conn = get_db()
+    try:
+        servicio = obtener_servicio_por_id(conn, id_servicio)
+        agendar_reunion(
+            conn,
+            id_estudiante=session["id_usuario"],
+            id_tutor=servicio["id_tutor"],
+            id_servicio=id_servicio,
+            fecha=fecha,
+            hora_inicio=hora_inicio,
+            hora_fin=hora_fin,
+        )
+        flash("¡Tutoría agendada con éxito!", "success")
+    except mysql.connector.Error as e:
+        # Captura los SIGNAL SQLSTATE '45000' del procedimiento (baneo o saldo insuficiente)
+        flash(f"No se pudo agendar: {e.msg}", "error")
+    finally:
+        close_db(conn)
+
+    return redirect(url_for("servicios.detalle", id_servicio=id_servicio))

@@ -19,7 +19,7 @@ def login():
         finally:
             close_db(conn)
 
-        if usuario and check_password_hash(usuario["password"], password):
+        if usuario and usuario["password"] == password:
             session["id_usuario"] = usuario["id_usuario"]
             session["nombre"] = usuario["nombre"]
             session["rol"] = usuario["rol"]
@@ -47,9 +47,8 @@ def registro():
                 flash("Ya existe una cuenta con ese email", "error")
                 return render_template("auth/registro.html")
 
-            password_hash = generate_password_hash(password)
             id_usuario = registrar_usuario_completo(
-                conn, nombre, email, password_hash, area, int(semestre)
+                conn, nombre, email, password, area, int(semestre)
             )
         finally:
             close_db(conn)
