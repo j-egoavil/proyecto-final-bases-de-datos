@@ -41,8 +41,8 @@
 - [ ] Ruta `usuario.py`: dashboard (saldo, proximas reuniones, perfil)
 - [ ] Ruta `tutor.py`: postular, crear servicio, mis servicios
 - [x] Ruta `servicios.py`: buscar, detalle, agendar con `pr_agendar_tutoria`
-- [ ] Ruta `reuniones.py`: mis reuniones, cancelar, finalizar
-- [ ] Ruta `admin.py`: dashboard, baneos, metricas
+- [x] Ruta `reuniones.py`: mis reuniones, cancelar, finalizar
+- [x] Ruta `admin.py`: dashboard, baneos, metricas
 
 ### Pendiente — Frontend (P5 + P6)
 

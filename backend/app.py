@@ -2,6 +2,8 @@ from flask import Flask
 from backend.config import SECRET_KEY, DEBUG
 from backend.routes.auth import auth_bp
 from backend.routes.servicios import servicios_bp
+from backend.routes.reuniones import reuniones_bp
+from backend.routes.admin import admin_bp
 
 app = Flask(
     __name__,
@@ -12,6 +14,8 @@ app.secret_key = SECRET_KEY
 
 app.register_blueprint(auth_bp, url_prefix="/auth")
 app.register_blueprint(servicios_bp, url_prefix="/servicios")
+app.register_blueprint(reuniones_bp, url_prefix="/reuniones")
+app.register_blueprint(admin_bp, url_prefix="/admin")
 
 
 @app.route("/")
