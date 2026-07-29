@@ -68,9 +68,9 @@ CREATE TRIGGER trg_validar_materia_tutor
 BEFORE INSERT ON materia_aprobada_tutor
 FOR EACH ROW
 BEGIN
-    IF new.nota < 4.1 THEN 
+    IF new.nota < 4.0 THEN 
 		SIGNAL SQLSTATE '45000' 
-        SET MESSAGE_TEXT = 'No se puede ser tutor de una materia si la nota es menor a 4.1';
+        SET MESSAGE_TEXT = 'No se puede ser tutor de una materia si la nota es menor a 4.0';
     END IF;    
     
 END$$
