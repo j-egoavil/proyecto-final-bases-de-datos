@@ -42,7 +42,7 @@ FLASK_DEBUG=True
 
 Salida esperada: `=== Resultado: 0 errores ===`
 
-> **Nota:** Si falla `vw_desempeno_tutores` o `vw_resumen_estudiante`, significa que las vistas no estan creadas en la BD. Ejecuta el bloque CREATE VIEW de `database/consultas.sql` (lineas 156-177) contra tu instancia MySQL.
+> **Nota:** Si falla alguna vista, ejecuta `database/Views.sql` contra tu instancia MySQL.
 
 ---
 
@@ -267,6 +267,11 @@ Todas estan en `backend.db.queries`. Reciben `conn` como primer parametro.
 |---------|--------|----------|
 | `Trg_actualizar_calificacion_tutor` | AFTER INSERT en resena | Recalcula calif_promedio del tutor |
 | `Trg_reserva_cancelada` | AFTER UPDATE en reunion (a Cancelada) | Si faltan >= 24h, reembolsa tokens al estudiante |
+| `trg_validar_materia_tutor` | BEFORE INSERT en materia_aprobada_tutor | Rechaza si nota < 4.0 |
+| `trg_validar_servicio` | BEFORE INSERT en servicio | Rechaza si el tutor no tiene la materia aprobada |
+| `trg_validar_baneo_reunion` | BEFORE INSERT en reunion | Rechaza si estudiante o tutor estan baneados |
+| `trg_validar_baneo_servicio` | BEFORE INSERT en servicio | Rechaza si el tutor esta baneado |
+| `trg_control_saldo` | BEFORE INSERT en reunion | Rechaza si el estudiante no tiene saldo suficiente |
 
 ### Vistas
 
@@ -274,6 +279,11 @@ Todas estan en `backend.db.queries`. Reciben `conn` como primer parametro.
 |-------|-----------|
 | `vw_resumen_estudiante` | id_estudiante, nombre, email, area, semestre, saldo_tokens, total_reuniones, resenas_otorgadas |
 | `vw_desempeno_tutores` | id_tutor, tutor, area, calif_promedio, materias_aprobadas, servicios_activos, tutorias_completadas |
+| `vw_dashboard_general` | Estadisticas agrupadas por area (estudiantes, tutores, reuniones, tokens, calif promedio) |
+| `vw_materias_demandadas` | Materias con mas reuniones, tutores ofertando y tokens generados |
+| `vw_perfil_tutor` | Perfil de tutor con materias aprobadas |
+
+Todas las vistas estan en `database/Views.sql`. Si alguna falta, ejecutar todo el archivo Views.sql contra la BD.
 
 ---
 
