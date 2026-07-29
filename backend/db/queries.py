@@ -149,6 +149,19 @@ def obtener_materias_tutor(conn, id_tutor):
 def obtener_desempeno_tutores(conn):
     return fetch_all(conn, "SELECT * FROM vw_desempeno_tutores")
 
+def obtener_perfil_tutor_completo(conn, id_tutor):
+    """Usa vw_perfil_tutor: una fila por cada materia que domina el tutor.
+    Lista vacía = el usuario todavía no se ha postulado como tutor."""
+    return fetch_all(conn, "SELECT * FROM vw_perfil_tutor WHERE id_tutor = %s", (id_tutor,))
+
+def agregar_materia_tutor(conn, id_tutor, id_materia, nota):
+    """Agrega una materia aprobada adicional a un tutor ya existente."""
+    execute(conn, """
+        INSERT INTO materia_aprobada_tutor (id_tutor, id_materia, nota)
+        VALUES (%s, %s, %s)
+    """, (id_tutor, id_materia, nota))
+    conn.commit()
+
 
 # =====================================================================
 # MATERIAS
