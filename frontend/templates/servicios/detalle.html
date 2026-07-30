@@ -23,23 +23,14 @@
         {% endif %}
 
         {% if session.get('id_usuario') %}
-            <form method="POST" action="{{ url_for('servicios.agendar', id_servicio=servicio.id_servicio) }}" class="row g-2 mt-3">
-                <div class="col-md-4">
-                    <label class="form-label">Fecha</label>
-                    <input type="date" name="fecha" class="form-control" required>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Hora inicio</label>
-                    <input type="time" name="hora_inicio" class="form-control" required>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Hora fin</label>
-                    <input type="time" name="hora_fin" class="form-control" required>
-                </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary w-100">Agendar</button>
-                </div>
-            </form>
+            {% if session['id_usuario'] == servicio.id_tutor %}
+                <p class="text-muted mt-3">No puedes agendar tu propio servicio.</p>
+            {% else %}
+                <a href="{{ url_for('reuniones.agendar', id_servicio=servicio.id_servicio) }}"
+                class="btn btn-primary mt-3">
+                    Agendar tutoría
+                </a>
+            {% endif %}
         {% else %}
             <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary mt-3">
                 Inicia sesión para agendar

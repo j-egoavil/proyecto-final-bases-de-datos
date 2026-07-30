@@ -35,7 +35,7 @@ def dashboard():
     try:
         estadisticas = obtener_estadisticas_generales(conn)
         desempeno = obtener_desempeno_tutores(conn)
-        balance = obtener_balance_historico(conn)
+        balance = obtener_balance_historico()
         baneos = _obtener_baneos_activos(conn)
     finally:
         close_db(conn)

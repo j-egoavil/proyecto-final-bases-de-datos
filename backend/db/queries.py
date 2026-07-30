@@ -324,6 +324,15 @@ def finalizar_reunion(conn, id_reunion):
         (id_reunion,))
     conn.commit()
 
+def obtener_ultima_reunion_id(conn, id_estudiante):
+    row = fetch_one(conn, "SELECT MAX(id_reunion) AS id FROM reunion WHERE id_estudiante = %s", (id_estudiante,))
+    return row["id"] if row else None
+
+
+def actualizar_tema_reunion(conn, id_reunion, tema):
+    execute(conn, "UPDATE reunion SET tema = %s WHERE id_reunion = %s", (tema, id_reunion))
+    conn.commit()
+
 
 # =====================================================================
 # RESENIAS
@@ -331,12 +340,12 @@ def finalizar_reunion(conn, id_reunion):
 
 def crear_resena(conn, id_estudiante, id_tutor, id_materia, calificacion, texto=None):
     """Crea una resena. El trigger actualiza calif_promedio del tutor."""
-    execute(conn, """
+    cursor = execute(conn, """
         INSERT INTO resena (id_estudiante, id_tutor, id_materia, calificacion, texto)
         VALUES (%s, %s, %s, %s, %s)
     """, (id_estudiante, id_tutor, id_materia, calificacion, texto))
     conn.commit()
-    return conn.insert_id()
+    return cursor.lastrowid  
 
 
 def obtener_resenas_tutor(conn, id_tutor):

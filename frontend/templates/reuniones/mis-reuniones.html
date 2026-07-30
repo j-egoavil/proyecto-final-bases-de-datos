@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Mis reuniones{% endblock %}
+{% block content %}
+
+<h2 class="mb-4">Mis reuniones</h2>
+
+<h5>Pendientes</h5>
+<table class="table table-striped mb-5">
+    <thead>
+        <tr>
+            <th>Fecha</th><th>Hora</th>
+            <th>{{ 'Estudiante' if session.get('rol','')|lower == 'tutor' else 'Tutor' }}</th>
+            <th>Servicio</th><th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in pendientes %}
+        <tr>
+            <td>{{ r.fecha }}</td>
+            <td>{{ r.hora_inicio }}</td>
+            <td>{{ r.estudiante_nombre if session.get('rol','')|lower == 'tutor' else r.tutor_nombre }}</td>
+            <td>{{ r.servicio_nombre }}</td>
+            <td>
+                <form method="POST" action="{{ url_for('reuniones.cancelar', id_reunion=r.id_reunion) }}" class="d-inline">
+                    <button class="btn btn-sm btn-outline-danger">Cancelar</button>
+                </form>
+                {% if session.get('rol','')|lower == 'tutor' %}
+                <form method="POST" action="{{ url_for('reuniones.finalizar', id_reunion=r.id_reunion) }}" class="d-inline">
+                    <button class="btn btn-sm btn-outline-success">Finalizar</button>
+                </form>
+                {% endif %}
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-muted">No tienes reuniones pendientes.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h5>Historial</h5>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Fecha</th><th>Servicio</th><th>Estado</th><th>Tokens</th>
+            {% if session.get('rol','')|lower != 'tutor' %}<th>Reseña</th>{% endif %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in reuniones %}
+        <tr>
+            <td>{{ r.fecha }}</td>
+            <td>{{ r.servicio_nombre }}</td>
+            <td>{{ r.estado }}</td>
+            <td>{{ r.tokens_cobrados }}</td>
+            {% if session.get('rol','')|lower != 'tutor' %}
+            <td>
+                {% if r.estado == 'Finalizada' %}
+                <form method="POST" action="{{ url_for('reuniones.resenar', id_reunion=r.id_reunion) }}" class="d-flex gap-1">
+                    <input type="number" name="calificacion" min="1" max="5" class="form-control form-control-sm" style="width:70px" required>
+                    <button class="btn btn-sm btn-outline-primary">Enviar</button>
+                </form>
+                {% endif %}
+            </td>
+            {% endif %}
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-muted">Sin historial todavía.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

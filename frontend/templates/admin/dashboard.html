@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Panel de administración{% endblock %}
+{% block content %}
+
+<h2 class="mb-4">Panel de administración</h2>
+
+<div class="row g-3 mb-5">
+    <div class="col-md-3"><div class="card text-center"><div class="card-body"><h6 class="text-muted">Usuarios</h6><h3>{{ estadisticas.total_usuarios }}</h3></div></div></div>
+    <div class="col-md-3"><div class="card text-center"><div class="card-body"><h6 class="text-muted">Tutores</h6><h3>{{ estadisticas.total_tutores }}</h3></div></div></div>
+    <div class="col-md-3"><div class="card text-center"><div class="card-body"><h6 class="text-muted">Tutorías finalizadas</h6><h3>{{ estadisticas.total_reuniones_finalizadas }}</h3></div></div></div>
+    <div class="col-md-3"><div class="card text-center"><div class="card-body"><h6 class="text-muted">Baneos activos</h6><h3>{{ estadisticas.baneos_activos }}</h3></div></div></div>
+</div>
+
+<h5>Ranking de tutores</h5>
+<table class="table table-striped mb-5">
+    <thead><tr><th>Tutor</th><th>Área</th><th>Calificación</th><th>Materias</th><th>Servicios</th><th>Completadas</th></tr></thead>
+    <tbody>
+        {% for t in desempeno %}
+        <tr>
+            <td>{{ t.tutor }}</td><td>{{ t.area }}</td><td>{{ "%.1f"|format(t.calif_promedio) }}</td>
+            <td>{{ t.materias_aprobadas }}</td><td>{{ t.servicios_activos }}</td><td>{{ t.tutorias_completadas }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h5>Baneos activos</h5>
+<table class="table table-striped mb-4">
+    <thead><tr><th>Usuario</th><th>Motivo</th><th>Hasta</th></tr></thead>
+    <tbody>
+        {% for b in baneos %}
+        <tr><td>{{ b.nombre }}</td><td>{{ b.motivo }}</td><td>{{ b.fecha_fin }}</td></tr>
+        {% else %}
+        <tr><td colspan="3" class="text-muted">Sin baneos activos.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<a href="{{ url_for('admin.baneos') }}" class="btn btn-outline-danger">Gestionar baneos</a>
+
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Gestión de baneos{% endblock %}
+{% block content %}
+
+<h2 class="mb-4">Gestión de baneos</h2>
+
+<h5>Aplicar nuevo baneo</h5>
+<form method="POST" action="{{ url_for('admin.crear_baneo_route') }}" class="row g-3 mb-5">
+    <div class="col-md-4">
+        <label class="form-label">Usuario</label>
+        <select name="id_usuario" class="form-select" required>
+            <option value="">Selecciona...</option>
+            {% for e in estudiantes %}<option value="{{ e.id_usuario }}">{{ e.nombre }} (estudiante)</option>{% endfor %}
+            {% for t in tutores %}<option value="{{ t.id_usuario }}">{{ t.nombre }} (tutor)</option>{% endfor %}
+        </select>
+    </div>
+    <div class="col-md-8">
+        <label class="form-label">Motivo</label>
+        <input type="text" name="motivo" class="form-control" required>
+    </div>
+    <div class="col-md-6">
+        <label class="form-label">Desde</label>
+        <input type="date" name="fecha_inicio" class="form-control" required>
+    </div>
+    <div class="col-md-6">
+        <label class="form-label">Hasta</label>
+        <input type="date" name="fecha_fin" class="form-control" required>
+    </div>
+    <div class="col-12">
+        <button type="submit" class="btn btn-danger">Aplicar baneo</button>
+    </div>
+</form>
+
+<h5>Baneos activos</h5>
+<table class="table table-striped">
+    <thead><tr><th>Usuario</th><th>Email</th><th>Motivo</th><th>Hasta</th><th></th></tr></thead>
+    <tbody>
+        {% for b in baneos %}
+        <tr>
+            <td>{{ b.nombre }}</td><td>{{ b.email }}</td><td>{{ b.motivo }}</td><td>{{ b.fecha_fin }}</td>
+            <td>
+                <form method="POST" action="{{ url_for('admin.levantar_baneo', id_usuario=b.id_usuario) }}">
+                    <button class="btn btn-sm btn-outline-success">Levantar</button>
+                </form>
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-muted">Sin baneos activos.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

@@ -1,3 +1,4 @@
+import mysql.connector
 from datetime import date
 
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
@@ -11,6 +12,9 @@ from backend.db.queries import (
     finalizar_reunion,
     crear_resena,
     obtener_servicio_por_id,
+    agendar_reunion,                 
+    obtener_ultima_reunion_id,       
+    actualizar_tema_reunion,
 )
 
 reuniones_bp = Blueprint("reuniones", __name__)
@@ -135,16 +139,66 @@ def resenar(id_reunion):
             return redirect(url_for("reuniones.mis_reuniones"))
 
         servicio = obtener_servicio_por_id(conn, reunion["id_servicio"])
-        crear_resena(
-            conn,
-            id_estudiante=reunion["id_estudiante"],
-            id_tutor=reunion["id_tutor"],
-            id_materia=servicio["id_materia"],
-            calificacion=calificacion,
-            texto=texto,
-        )
-        flash("Resena enviada correctamente", "success")
+        try:  
+            crear_resena(
+                conn,
+                id_estudiante=reunion["id_estudiante"],
+                id_tutor=reunion["id_tutor"],
+                id_materia=servicio["id_materia"],
+                calificacion=calificacion,
+                texto=texto,
+            )
+            flash("Resena enviada correctamente", "success")
+        except mysql.connector.IntegrityError:
+            conn.rollback()
+            flash("Ya dejaste una reseña para este tutor en esta materia.", "warning")
     finally:
         close_db(conn)
 
     return redirect(url_for("reuniones.mis_reuniones"))
+
+@reuniones_bp.route("/agendar/<int:id_servicio>", methods=["GET", "POST"])
+def agendar(id_servicio):
+    if not _login_required():
+        return redirect(url_for("auth.login"))
+
+    conn = get_db()
+    try:
+        servicio = obtener_servicio_por_id(conn, id_servicio)
+        if not servicio:
+            flash("Servicio no encontrado", "error")
+            return redirect(url_for("servicios.buscar"))
+
+        if session["id_usuario"] == servicio["id_tutor"]:
+            flash("No puedes agendar una tutoría contigo mismo.", "error")
+            return redirect(url_for("servicios.detalle", id_servicio=id_servicio))
+
+        if request.method == "POST":
+            fecha = request.form.get("fecha")
+            hora_inicio = request.form.get("hora_inicio")
+            hora_fin = request.form.get("hora_fin")
+            tema = request.form.get("tema") or None
+
+            try:
+                agendar_reunion(
+                    conn,
+                    id_estudiante=session["id_usuario"],
+                    id_tutor=servicio["id_tutor"],
+                    id_servicio=id_servicio,
+                    fecha=fecha,
+                    hora_inicio=hora_inicio,
+                    hora_fin=hora_fin,
+                )
+                if tema:
+                    id_reunion = obtener_ultima_reunion_id(conn, session["id_usuario"])
+                    if id_reunion:
+                        actualizar_tema_reunion(conn, id_reunion, tema)
+
+                flash("¡Tutoría agendada con éxito!", "success")
+                return redirect(url_for("reuniones.mis_reuniones"))
+            except mysql.connector.Error as e:
+                flash(f"No se pudo agendar: {e.msg}", "error")
+    finally:
+        close_db(conn)
+
+    return render_template("reuniones/agendar.html", servicio=servicio)

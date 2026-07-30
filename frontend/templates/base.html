@@ -52,9 +52,19 @@
                         <i class="fa-solid fa-magnifying-glass me-1"></i> Buscar servicios
                     </a>
 
+                     <a class="btn btn-outline-light btn-sm me-3 px-3 rounded-pill" href="{{ url_for('reuniones.mis_reuniones') }}">
+                        <i class="fa-solid fa-calendar-check me-1"></i> Mis reuniones
+                    </a>
+
+                    {% if session.get('rol', '')|lower == 'admin' %}
+                        <a class="btn btn-warning btn-sm me-3 px-3 rounded-pill text-dark fw-bold" href="{{ url_for('admin.dashboard') }}">
+                            <i class="fa-solid fa-user-shield me-1"></i> Panel Admin
+                        </a>
+                    {% endif %}
+
                     <!-- Tokens -->
                     <div class="badge badge-tokens px-3 py-2 rounded-pill me-3 shadow-sm">
-                        <i class="fa-solid fa-coins me-1"></i> {{ session.get('saldo_tokens', 0) }} Tokens
+                        <i class="fa-solid fa-coins me-1"></i> {{ saldo_actual }} Tokens
                     </div>
 
                     <!-- Nombre / Rol con enlace al perfil -->
