@@ -14,12 +14,23 @@ def buscar():
     id_materia = request.args.get("id_materia", type=int)
     modalidad = request.args.get("modalidad") or None
     precio_max = request.args.get("precio_max", type=int)
+    
+    # 1. Capturamos la página actual (por defecto es 1)
+    page = request.args.get("page", 1, type=int)
+    per_page = 50
+    offset = (page - 1) * per_page
 
     conn = get_db()
     try:
         materias = obtener_materias(conn)
+        # 2. Le pasamos el limit (per_page) y offset a tu función de queries
         servicios = obtener_servicios(
-            conn, id_materia=id_materia, modalidad=modalidad, precio_max=precio_max
+            conn, 
+            id_materia=id_materia, 
+            modalidad=modalidad, 
+            precio_max=precio_max,
+            limit=per_page,
+            offset=offset
         )
     finally:
         close_db(conn)
@@ -29,6 +40,7 @@ def buscar():
         materias=materias,
         servicios=servicios,
         filtros={"id_materia": id_materia, "modalidad": modalidad, "precio_max": precio_max},
+        page=page  # 3. Mandamos la página al HTML para que funcionen los botones
     )
 
 

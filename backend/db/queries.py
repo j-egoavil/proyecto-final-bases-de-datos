@@ -202,7 +202,7 @@ def crear_servicio(conn, id_tutor, id_materia, nombre, precio_tokens, modalidad,
     return cursor.lastrowid  
 
 
-def obtener_servicios(conn, id_materia=None, modalidad=None, precio_max=None):
+def obtener_servicios(conn, id_materia=None, modalidad=None, precio_max=None, limit=50, offset=0):
     query = """
         SELECT s.*, u.nombre AS tutor_nombre, m.nombre AS materia_nombre,
                t.calif_promedio
@@ -213,6 +213,7 @@ def obtener_servicios(conn, id_materia=None, modalidad=None, precio_max=None):
         WHERE 1=1
     """
     params = []
+    
     if id_materia:
         query += " AND s.id_materia = %s"
         params.append(id_materia)
@@ -222,7 +223,13 @@ def obtener_servicios(conn, id_materia=None, modalidad=None, precio_max=None):
     if precio_max:
         query += " AND s.precio_tokens <= %s"
         params.append(precio_max)
+        
     query += " ORDER BY t.calif_promedio DESC"
+    
+    # Se agrega la lógica de paginación
+    query += " LIMIT %s OFFSET %s"
+    params.extend([limit, offset])
+    
     return fetch_all(conn, query, params)
 
 
