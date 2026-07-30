@@ -53,8 +53,8 @@
 - [x] `tutor/postular.html` + `mis-servicios.html`
 - [x] `servicios/buscar.html` — filtros por materia, modalidad, precio
 - [x] `servicios/detalle.html` — boton "Agendar"
-- [ ] `reuniones/agendar.html` — fecha, hora, tema
-- [ ] `admin/dashboard.html` — metricas, ranking tutores, gestion baneos
+- [x] `reuniones/agendar.html` — fecha, hora, tema
+- [x] `admin/dashboard.html` — metricas, ranking tutores, gestion baneos
 - [x] `static/css/style.css` + `static/js/main.js`
 
 ---
