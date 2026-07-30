@@ -1,26 +1,115 @@
 {% extends "base.html" %}
 {% block title %}Agregar materia{% endblock %}
+
 {% block content %}
+<style>
+    /* Fondo con gradiente cálido */
+    body {
+        background: linear-gradient(135deg, #fcfaf8 0%, #ede3da 100%) !important;
+        min-height: 100vh;
+    }
 
-<h2 class="mb-4">Agregar una materia que domino</h2>
+    /* Contenedor principal de la tarjeta */
+    data-wrapper, .add-subject-wrapper {
+        max-width: 750px;
+        margin: 2rem auto;
+    }
 
-<form method="POST" action="{{ url_for('tutor.agregar_materia') }}" class="row g-3">
-    <div class="col-md-8">
-        <label class="form-label">Materia</label>
-        <select name="id_materia" class="form-select" required>
-            <option value="">Selecciona...</option>
-            {% for materia in materias %}
-                <option value="{{ materia.id_materia }}">{{ materia.nombre }}</option>
-            {% endfor %}
-        </select>
+    /* Tarjeta estilo Vidrio Esmerilado (Glassmorphism) */
+    .add-subject-card {
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        border-radius: 2rem;
+        box-shadow: 0 15px 35px rgba(139, 69, 19, 0.08);
+        padding: 3rem;
+    }
+
+    /* Título principal con gradiente */
+    .add-subject-title {
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        background: linear-gradient(135deg, #5c2c0b, #d97706);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Inputs y selects personalizados */
+    .custom-input-group {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+        overflow: hidden;
+        border: 1px solid rgba(139, 69, 19, 0.08);
+    }
+
+    /* Botón principal */
+    .btn-gradient {
+        background: linear-gradient(135deg, #d97706, #b45309);
+        color: white;
+        border: none;
+        transition: all 0.3s ease;
+    }
+    .btn-gradient:hover {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px -5px rgba(217, 119, 6, 0.4);
+    }
+</style>
+
+<div class="add-subject-wrapper">
+    
+    <div class="add-subject-card">
+        
+        <!-- Encabezado -->
+        <div class="mb-4">
+            <span class="badge bg-white text-warning border px-3 py-2 rounded-pill shadow-sm mb-3">
+                <i class="fa-solid fa-book-open-reader me-1"></i> Perfil Académico
+            </span>
+            <h2 class="add-subject-title display-6 mb-1">Agregar Materia</h2>
+            <p class="text-secondary small mb-0">Añade una nueva materia que domines para ofrecerla en tus tutorías.</p>
+        </div>
+
+        <hr class="text-muted opacity-15 my-4">
+
+        <!-- Formulario -->
+        <form method="POST" action="{{ url_for('tutor.agregar_materia') }}" class="row g-4">
+            
+            <!-- Materia -->
+            <div class="col-md-8">
+                <label class="form-label text-muted small fw-bold text-uppercase ms-2">Materia</label>
+                <div class="custom-input-group d-flex align-items-center px-3 py-2">
+                    <i class="fa-solid fa-book text-warning fs-5 me-3"></i>
+                    <select name="id_materia" class="form-select border-0 bg-transparent py-2 shadow-none" required>
+                        <option value="">Selecciona materia...</option>
+                        {% for materia in materias %}
+                            <option value="{{ materia.id_materia }}">{{ materia.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Nota Obtenida -->
+            <div class="col-md-4">
+                <label class="form-label text-muted small fw-bold text-uppercase ms-2">Nota obtenida</label>
+                <div class="custom-input-group d-flex align-items-center px-3 py-2">
+                    <i class="fa-solid fa-star text-warning fs-5 me-3"></i>
+                    <input type="number" name="nota" class="form-control border-0 bg-transparent py-2 shadow-none text-center" min="4.0" max="5.0" step="0.1" placeholder="Ej. 4.5" required>
+                </div>
+            </div>
+
+            <!-- Botón Agregar -->
+            <div class="col-12 mt-4">
+                <button type="submit" class="btn btn-gradient w-100 rounded-pill py-3 fw-bold fs-6 shadow-sm">
+                    <i class="fa-solid fa-circle-plus me-2"></i> Agregar materia
+                </button>
+            </div>
+
+        </form>
+
     </div>
-    <div class="col-md-4">
-        <label class="form-label">Nota obtenida</label>
-        <input type="number" name="nota" class="form-control" min="4.0" max="5.0" step="0.1" required>
-    </div>
-    <div class="col-12">
-        <button type="submit" class="btn btn-primary">Agregar</button>
-    </div>
-</form>
+</div>
 
 {% endblock %}

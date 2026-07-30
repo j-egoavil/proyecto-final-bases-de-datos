@@ -6,104 +6,244 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
     <style>
-        .navbar-custom {
-            background-color: #1f120d !important;
-            border-bottom: 2px solid #8b4513;
+        /* Fondo con gradiente cálido global */
+        body {
+            background: linear-gradient(135deg, #fcfaf8 0%, #ede3da 100%) !important;
+            min-height: 100vh;
+            position: relative;
+            padding-bottom: 3rem;
         }
+
+        /* Navbar Sticky estilo Glassmorphism Oscuro */
+        .navbar-custom {
+            background: rgba(31, 18, 13, 0.95) !important;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 2px solid rgba(139, 69, 19, 0.4);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
         .navbar-brand img {
             transition: transform 0.3s ease;
         }
         .navbar-brand:hover img {
             transform: scale(1.05);
         }
+
+        /* Insignia de tokens elegante */
         .badge-tokens {
             background: linear-gradient(135deg, #d97706, #b45309);
             color: white;
             font-weight: 600;
+            box-shadow: 0 4px 10px rgba(217, 119, 6, 0.3);
         }
-        .user-info-link {
+
+        /* Botones de Iconos con Tooltip Moderno */
+        .nav-icon-btn {
+            position: relative;
+            background: rgba(255, 255, 255, 0.08);
             color: #e2e8f0;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
             text-decoration: none;
-            transition: color 0.2s;
         }
-        .user-info-link:hover {
+
+        .nav-icon-btn:hover {
+            background: linear-gradient(135deg, #d97706, #b45309);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(217, 119, 6, 0.4);
+            border-color: transparent;
+        }
+
+        /* Tooltip personalizado al hacer Hover */
+        .nav-icon-btn::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: -35px;
+            left: 50%;
+            transform: translateX(-50%) scale(0.8);
+            background: #1f120d;
+            color: #fff;
+            padding: 4px 10px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+            border-radius: 6px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            pointer-events: none;
+            z-index: 100;
+            border: 1px solid rgba(217, 119, 6, 0.3);
+        }
+
+        .nav-icon-btn:hover::after {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) scale(1);
+        }
+
+        /* Menú desplegable del usuario */
+        .dropdown-menu-custom {
+            background: #2a1710;
+            border: 1px solid rgba(139, 69, 19, 0.4);
+            border-radius: 1rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            padding: 0.5rem;
+        }
+        .dropdown-item-custom {
+            color: #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 0.5rem 1rem;
+            transition: all 0.2s;
+        }
+        .dropdown-item-custom:hover {
+            background: rgba(217, 119, 6, 0.2);
             color: #fbbf24;
+        }
+
+        /* Botón flotante para subir (Scroll to top) */
+        #btnScrollTop {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: none;
+            z-index: 99;
+            background: linear-gradient(135deg, #d97706, #b45309);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 1.2rem;
+            box-shadow: 0 10px 20px rgba(217, 119, 6, 0.4);
+            transition: all 0.3s ease;
+        }
+        #btnScrollTop:hover {
+            transform: translateY(-4px);
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .alert {
+            border-radius: 1rem;
+            border: none;
+            backdrop-filter: blur(10px);
         }
     </style>
 </head>
-<body class="bg-light">
-    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom shadow-sm mb-4">
+<body>
+
+    <!-- NAVBAR FIJO (STICKY) -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top mb-4">
         <div class="container">
             <!-- LOGO Y TEXTO A LA IZQUIERDA -->
-            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('index') }}">
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('servicios.buscar') }}">
                 <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo U-Linker" width="40" height="40" class="d-inline-block align-text-top me-2 rounded-circle bg-white p-1 shadow-sm">
                 <span class="fw-bold tracking-wide fs-4 text-white" style="letter-spacing: 0.5px;">U-Linker</span>
             </a>
 
-            <!-- BOTONES E INFO A LA DERECHA -->
-            <div class="d-flex align-items-center">
-                {% if session.get('id_usuario') %}
-                    <!-- NUEVO: menú de navegación principal -->
-                    <a class="btn btn-outline-light btn-sm me-2 px-3 rounded-pill" href="{{ url_for('usuario.dashboard') }}">
-                        <i class="fa-solid fa-house me-1"></i> Dashboard
-                    </a>
-                    <a class="btn btn-outline-light btn-sm me-3 px-3 rounded-pill" href="{{ url_for('servicios.buscar') }}">
-                        <i class="fa-solid fa-magnifying-glass me-1"></i> Buscar servicios
-                    </a>
+            <!-- BOTÓN HAMBURGUESA PARA MÓVILES -->
+            <button class="navbar-toggler border-0 shadow-none text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <i class="fa-solid fa-bars fs-2 text-warning"></i>
+            </button>
 
-                     <a class="btn btn-outline-light btn-sm me-3 px-3 rounded-pill" href="{{ url_for('reuniones.mis_reuniones') }}">
-                        <i class="fa-solid fa-calendar-check me-1"></i> Mis reuniones
-                    </a>
+            <!-- CONTENIDO DE NAVEGACIÓN COLAPSIBLE -->
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                <div class="d-flex flex-column flex-lg-row align-items-lg-center gap-3 mt-3 mt-lg-0">
+                    {% if session.get('id_usuario') %}
+                        
+                        <!-- ICONOS DE NAVEGACIÓN PRINCIPAL CON TOOLTIP -->
+                        <div class="d-flex align-items-center gap-2">
+                            <a class="nav-icon-btn" href="{{ url_for('usuario.dashboard') }}" data-tooltip="Dashboard">
+                                <i class="fa-solid fa-house"></i>
+                            </a>
+                            <a class="nav-icon-btn" href="{{ url_for('servicios.buscar') }}" data-tooltip="Buscar servicios">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                            </a>
+                            <a class="nav-icon-btn" href="{{ url_for('reuniones.mis_reuniones') }}" data-tooltip="Mis reuniones">
+                                <i class="fa-solid fa-calendar-check"></i>
+                            </a>
 
-                    {% if session.get('rol', '')|lower == 'admin' %}
-                        <a class="btn btn-warning btn-sm me-3 px-3 rounded-pill text-dark fw-bold" href="{{ url_for('admin.dashboard') }}">
-                            <i class="fa-solid fa-user-shield me-1"></i> Panel Admin
-                        </a>
-                    {% endif %}
+                            <!-- Panel de Administrador -->
+                            {% if session.get('rol', '')|lower == 'admin' %}
+                                <a class="nav-icon-btn text-warning" href="{{ url_for('admin.dashboard') }}" data-tooltip="Panel Admin">
+                                    <i class="fa-solid fa-user-shield"></i>
+                                </a>
+                            {% endif %}
 
-                    <!-- Tokens -->
-                    <div class="badge badge-tokens px-3 py-2 rounded-pill me-3 shadow-sm">
-                        <i class="fa-solid fa-coins me-1"></i> {{ saldo_actual }} Tokens
-                    </div>
+                            <!-- Zona de Tutor / Postulación -->
+                            {% if session.get('rol', '')|lower == 'tutor' %}
+                                <a class="nav-icon-btn text-info" href="{{ url_for('tutor.mis_servicios') }}" data-tooltip="Mis servicios (Tutor)">
+                                    <i class="fa-solid fa-chalkboard-user"></i>
+                                </a>
+                            {% elif session.get('rol', '')|lower != 'admin' %}
+                                <a class="nav-icon-btn text-success" href="{{ url_for('tutor.postular') }}" data-tooltip="Postularme como tutor">
+                                    <i class="fa-solid fa-user-plus"></i>
+                                </a>
+                            {% endif %}
+                        </div>
 
-                    <!-- Nombre / Rol con enlace al perfil -->
-                    <div class="text-white me-3 d-none d-md-flex align-items-center small">
-                        <a href="{{ url_for('usuario.perfil') }}" class="user-info-link fw-semibold">
-                            {{ session.get('nombre', 'Usuario') }} 
-                            <span class="text-warning mx-1">/</span> 
-                            <span class="text-light text-capitalize opacity-75">{{ session.get('rol', 'estudiante') }}</span>
-                        </a>
-                    </div>
+                        <div class="vr bg-secondary opacity-25 d-none d-lg-block mx-1" style="height: 25px;"></div>
 
-                    <!-- Acceso a zona de tutor, según rol -->
-                    {% if session.get('rol', '')|lower == 'tutor' %}
-                        <a class="btn btn-outline-light btn-sm me-2 px-3 rounded-pill" href="{{ url_for('tutor.mis_servicios') }}">
-                            <i class="fa-solid fa-chalkboard-user me-1"></i> Mis servicios
-                        </a>
+                        <!-- Tokens -->
+                        <div class="badge badge-tokens px-3 py-2 rounded-pill shadow-sm text-center">
+                            <i class="fa-solid fa-coins me-1"></i> {{ saldo_actual }} Tokens
+                        </div>
+
+                        <!-- MENÚ DESPLEGABLE DE PERFIL Y SALIDA -->
+                        <div class="dropdown">
+                            <button class="btn btn-outline-light btn-sm rounded-pill px-3 dropdown-toggle d-flex align-items-center gap-2 border-0 bg-white bg-opacity-10 shadow-none" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa-solid fa-circle-user text-warning fs-5"></i>
+                                <span class="fw-semibold text-start text-truncate" style="max-width: 130px;">{{ session.get('nombre', 'Usuario') }}</span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end dropdown-menu-custom mt-2">
+                                <li>
+                                    <div class="px-3 py-2 text-white small border-bottom border-secondary border-opacity-25 mb-1">
+                                        <span class="d-block fw-bold text-warning">{{ session.get('nombre') }}</span>
+                                        <span class="text-capitalize text-light opacity-75 small">{{ session.get('rol', 'estudiante') }}</span>
+                                    </div>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item dropdown-item-custom d-flex align-items-center gap-2" href="{{ url_for('usuario.perfil') }}">
+                                        <i class="fa-solid fa-gear text-warning"></i> Mi Perfil
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider border-secondary opacity-25"></li>
+                                <li>
+                                    <a class="dropdown-item dropdown-item-custom d-flex align-items-center gap-2 text-danger" href="{{ url_for('auth.logout') }}">
+                                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Salir
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+
                     {% else %}
-                        <a class="btn btn-outline-light btn-sm me-2 px-3 rounded-pill" href="{{ url_for('tutor.postular') }}">
-                            <i class="fa-solid fa-user-plus me-1"></i> Postularme como tutor
-                        </a>
+                        <div class="d-flex align-items-center gap-2">
+                            <a class="btn btn-outline-light btn-sm px-3 rounded-pill" href="{{ url_for('auth.login') }}">Iniciar sesión</a>
+                            <a class="btn btn-warning btn-sm px-3 rounded-pill text-dark fw-bold shadow-sm" href="{{ url_for('auth.registro') }}">Crear cuenta</a>
+                        </div>
                     {% endif %}
-
-                    <!-- Botón Salir -->
-                    <a class="btn btn-outline-light btn-sm px-3 rounded-pill shadow-sm" href="{{ url_for('auth.logout') }}">
-                        <i class="fa-solid fa-arrow-right-from-bracket me-1"></i> Salir
-                    </a>
-                {% else %}
-                    <a class="btn btn-outline-light btn-sm me-2 px-3 rounded-pill" href="{{ url_for('auth.login') }}">Iniciar sesión</a>
-                    <a class="btn btn-warning btn-sm px-3 rounded-pill text-dark fw-bold shadow-sm" href="{{ url_for('auth.registro') }}">Crear cuenta</a>
-                {% endif %}
+                </div>
             </div>
         </div>
     </nav>
 
-    <div class="container">
+    <!-- CONTENEDOR PRINCIPAL -->
+    <div class="container py-3">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% for category, message in messages %}
-                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show shadow-sm" role="alert">
-                    {{ message }}
+                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show shadow-sm mb-4" role="alert">
+                    <i class="fa-solid fa-circle-info me-2"></i> {{ message }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             {% endfor %}
@@ -112,7 +252,38 @@
         {% block content %}{% endblock %}
     </div>
 
+    <!-- BOTÓN FLOTANTE PARA SUBIR (SCROLL TO TOP) -->
+    <button onclick="scrollToTop()" id="btnScrollTop" title="Volver arriba">
+        <i class="fa-solid fa-arrow-up"></i>
+    </button>
+
+    <!-- SCRIPTS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        let calcScrollValue = () => {
+            let scrollProgress = document.getElementById("btnScrollTop");
+            let pos = document.documentElement.scrollTop;
+            let calcHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            
+            if (pos > 200) {
+                scrollProgress.style.display = "flex";
+                scrollProgress.style.alignItems = "center";
+                scrollProgress.style.justifyContent = "center";
+            } else {
+                scrollProgress.style.display = "none";
+            }
+        };
+
+        window.onscroll = calcScrollValue;
+        window.onload = calcScrollValue;
+
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+            });
+        }
+    </script>
 </body>
 </html>

@@ -1,35 +1,157 @@
 {% extends "base.html" %}
 {% block title %}Agendar tutoría{% endblock %}
+
 {% block content %}
+<style>
+    /* Fondo con gradiente cálido */
+    body {
+        background: linear-gradient(135deg, #fcfaf8 0%, #ede3da 100%) !important;
+        min-height: 100vh;
+    }
 
-<a href="{{ url_for('servicios.detalle', id_servicio=servicio.id_servicio) }}"
-   class="btn btn-sm btn-outline-secondary mb-3">← Volver al servicio</a>
+    /* Contenedor central de la tarjeta */
+    .schedule-wrapper {
+        max-width: 750px;
+        margin: 2rem auto;
+    }
 
-<h2 class="mb-1">Agendar: {{ servicio.nombre }}</h2>
-<p class="text-muted">
-    {{ servicio.materia_nombre }} — Tutor: {{ servicio.tutor_nombre }} — {{ servicio.precio_tokens }} tokens
-</p>
+    /* Tarjeta estilo Vidrio Esmerilado (Glassmorphism) */
+    .schedule-card {
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        border-radius: 2rem;
+        box-shadow: 0 15px 35px rgba(139, 69, 19, 0.08);
+        padding: 3rem;
+    }
 
-<form method="POST" class="row g-3 mt-3">
-    <div class="col-md-4">
-        <label class="form-label">Fecha</label>
-        <input type="date" name="fecha" class="form-control" required>
+    /* Botón de Volver */
+    .btn-back {
+        background: rgba(255, 255, 255, 0.8);
+        border: 1px solid rgba(139, 69, 19, 0.15);
+        color: #5c2c0b;
+        border-radius: 50px;
+        padding: 0.5rem 1.2rem;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+    }
+    .btn-back:hover {
+        background: #ffffff;
+        color: #d97706;
+        transform: translateX(-3px);
+    }
+
+    /* Título principal con gradiente */
+    .schedule-title {
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        background: linear-gradient(135deg, #5c2c0b, #d97706);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Inputs personalizados */
+    .custom-input-group {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+        overflow: hidden;
+        border: 1px solid rgba(139, 69, 19, 0.08);
+    }
+
+    /* Botón principal */
+    .btn-gradient {
+        background: linear-gradient(135deg, #d97706, #b45309);
+        color: white;
+        border: none;
+        transition: all 0.3s ease;
+    }
+    .btn-gradient:hover {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px -5px rgba(217, 119, 6, 0.4);
+    }
+</style>
+
+<div class="schedule-wrapper">
+    <!-- Botón Volver -->
+    <a href="{{ url_for('servicios.detalle', id_servicio=servicio.id_servicio) }}" class="btn-back mb-4">
+        <i class="fa-solid fa-arrow-left me-2"></i> Volver al servicio
+    </a>
+
+    <!-- Tarjeta Principal -->
+    <div class="schedule-card">
+        
+        <!-- Encabezado con Resumen del Servicio -->
+        <div class="mb-4">
+            <span class="badge bg-white text-dark rounded-pill px-3 py-2 shadow-sm border mb-3">
+                <i class="fa-solid fa-coins text-warning me-1">​</i> {{ servicio.precio_tokens }} tokens
+            </span>
+            <h2 class="schedule-title display-6 mb-2">Agendar Tutoría</h2>
+            <p class="text-secondary mb-1 fw-bold fs-5">{{ servicio.nombre }}</p>
+            <p class="text-muted small mb-0">
+                <i class="fa-solid fa-book-open me-1"></i> {{ servicio.materia_nombre }} &nbsp;|&nbsp; 
+                <i class="fa-solid fa-chalkboard-user me-1"></i> Tutor: {{ servicio.tutor_nombre }}
+            </p>
+        </div>
+
+        <hr class="text-muted opacity-15 my-4">
+
+        <!-- Formulario -->
+        <form method="POST" class="row g-4">
+            
+            <!-- Fecha -->
+            <div class="col-md-12">
+                <label class="form-label text-muted small fw-bold text-uppercase ms-2">Fecha de la sesión</label>
+                <div class="custom-input-group d-flex align-items-center px-3 py-2">
+                    <i class="fa-solid fa-calendar-days text-warning fs-5 me-3"></i>
+                    <input type="date" name="fecha" class="form-control border-0 bg-transparent py-2 shadow-none" required>
+                </div>
+            </div>
+
+            <!-- Hora inicio -->
+            <div class="col-md-6">
+                <label class="form-label text-muted small fw-bold text-uppercase ms-2">Hora inicio</label>
+                <div class="custom-input-group d-flex align-items-center px-3 py-2">
+                    <i class="fa-solid fa-clock text-warning fs-5 me-3"></i>
+                    <input type="time" name="hora_inicio" class="form-control border-0 bg-transparent py-2 shadow-none" required>
+                </div>
+            </div>
+
+            <!-- Hora fin -->
+            <div class="col-md-6">
+                <label class="form-label text-muted small fw-bold text-uppercase ms-2">Hora fin</label>
+                <div class="custom-input-group d-flex align-items-center px-3 py-2">
+                    <i class="fa-solid fa-hourglass-end text-warning fs-5 me-3"></i>
+                    <input type="time" name="hora_fin" class="form-control border-0 bg-transparent py-2 shadow-none" required>
+                </div>
+            </div>
+
+            <!-- Tema -->
+            <div class="col-12">
+                <label class="form-label text-muted small fw-bold text-uppercase ms-2">Tema (opcional)</label>
+                <div class="custom-input-group d-flex align-items-center px-3 py-2">
+                    <i class="fa-solid fa-pen text-warning fs-5 me-3"></i>
+                    <input type="text" name="tema" class="form-control border-0 bg-transparent py-2 shadow-none" placeholder="Ej. Dudas sobre la unidad 3 o un ejercicio específico">
+                </div>
+            </div>
+
+            <!-- Botón de Confirmación -->
+            <div class="col-12 mt-4">
+                <button type="submit" class="btn btn-gradient w-100 rounded-pill py-3 fw-bold fs-6 shadow-sm">
+                    <i class="fa-solid fa-circle-check me-2"></i> Confirmar agendamiento
+                </button>
+            </div>
+
+        </form>
+
     </div>
-    <div class="col-md-4">
-        <label class="form-label">Hora inicio</label>
-        <input type="time" name="hora_inicio" class="form-control" required>
-    </div>
-    <div class="col-md-4">
-        <label class="form-label">Hora fin</label>
-        <input type="time" name="hora_fin" class="form-control" required>
-    </div>
-    <div class="col-12">
-        <label class="form-label">Tema (opcional)</label>
-        <input type="text" name="tema" class="form-control" placeholder="Ej. Dudas sobre la unidad 3">
-    </div>
-    <div class="col-12">
-        <button type="submit" class="btn btn-primary">Confirmar agendamiento</button>
-    </div>
-</form>
+</div>
 
 {% endblock %}

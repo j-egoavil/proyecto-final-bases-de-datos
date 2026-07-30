@@ -1,53 +1,154 @@
 {% extends "base.html" %}
 {% block title %}Crear servicio{% endblock %}
+
 {% block content %}
+<style>
+    /* Fondo con gradiente cálido */
+    body {
+        background: linear-gradient(135deg, #fcfaf8 0%, #ede3da 100%) !important;
+        min-height: 100vh;
+    }
 
-<h2 class="mb-4">Crear nuevo servicio</h2>
+    /* Contenedor principal de la tarjeta */
+    .create-service-wrapper {
+        max-width: 850px;
+        margin: 2rem auto;
+    }
 
-{% if not materias %}
-    <div class="alert alert-warning">
-        No tienes materias aprobadas registradas todavía, así que no puedes ofrecer servicios.
-    </div>
-{% else %}
-<form method="POST" action="{{ url_for('tutor.crear_nuevo_servicio') }}" class="row g-3">
-    <div class="col-md-6">
-        <label class="form-label">Nombre del servicio</label>
-        <input type="text" name="nombre" class="form-control" required>
-    </div>
+    /* Tarjeta estilo Vidrio Esmerilado (Glassmorphism) */
+    .create-service-card {
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        border-radius: 2rem;
+        box-shadow: 0 15px 35px rgba(139, 69, 19, 0.08);
+        padding: 3rem;
+    }
 
-    <div class="col-md-6">
-        <label class="form-label">Materia</label>
-        <select name="id_materia" class="form-select" required>
-            <option value="">Selecciona...</option>
-            {% for m in materias %}
-                <option value="{{ m.id_materia }}">{{ m.nombre }}</option>
-            {% endfor %}
-        </select>
-    </div>
+    /* Título principal con gradiente */
+    .create-service-title {
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        background: linear-gradient(135deg, #5c2c0b, #d97706);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
 
-    <div class="col-md-3">
-        <label class="form-label">Precio (tokens)</label>
-        <input type="number" name="precio_tokens" class="form-control" min="1" required>
-    </div>
+    /* Inputs y selects personalizados */
+    .custom-input-group {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+        overflow: hidden;
+        border: 1px solid rgba(139, 69, 19, 0.08);
+    }
 
-    <div class="col-md-4">
-        <label class="form-label">Modalidad</label>
-        <select name="modalidad" class="form-select" required>
-            <option value="Virtual">Virtual</option>
-            <option value="Presencial">Presencial</option>
-            <option value="Híbrido">Híbrido</option>
-        </select>
-    </div>
+    /* Botón principal */
+    .btn-gradient {
+        background: linear-gradient(135deg, #d97706, #b45309);
+        color: white;
+        border: none;
+        transition: all 0.3s ease;
+    }
+    .btn-gradient:hover {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px -5px rgba(217, 119, 6, 0.4);
+    }
+</style>
 
-    <div class="col-12">
-        <label class="form-label">Descripción</label>
-        <textarea name="descripcion" class="form-control" rows="2"></textarea>
-    </div>
+<div class="create-service-wrapper">
+    
+    <div class="create-service-card">
+        
+        <!-- Encabezado -->
+        <div class="mb-4">
+            <span class="badge bg-white text-warning border px-3 py-2 rounded-pill shadow-sm mb-3">
+                <i class="fa-solid fa-briefcase me-1"></i> Oferta Académica
+            </span>
+            <h2 class="create-service-title display-6 mb-1">Crear Nuevo Servicio</h2>
+            <p class="text-secondary small mb-0">Publica una nueva tutoría para que los estudiantes puedan agendar contigo.</p>
+        </div>
 
-    <div class="col-12">
-        <button type="submit" class="btn btn-success">Crear servicio</button>
+        <hr class="text-muted opacity-15 my-4">
+
+        {% if not materias %}
+            <div class="alert alert-warning border-0 bg-warning bg-opacity-10 text-dark rounded-4 p-4 shadow-sm d-flex align-items-center gap-3">
+                <i class="fa-solid fa-triangle-exclamation fs-3 text-warning"></i>
+                <div>
+                    <h6 class="fw-bold mb-1">No tienes materias aprobadas registradas</h6>
+                    <p class="mb-0 small text-muted">Debes registrar al menos una materia aprobada en tu perfil de tutor antes de poder ofrecer servicios.</p>
+                </div>
+            </div>
+        {% else %}
+        <form method="POST" action="{{ url_for('tutor.crear_nuevo_servicio') }}" class="row g-4">
+            
+            <!-- Nombre del servicio -->
+            <div class="col-md-6">
+                <label class="form-label text-muted small fw-bold text-uppercase ms-2">Nombre del servicio</label>
+                <div class="custom-input-group d-flex align-items-center px-3 py-2">
+                    <i class="fa-solid fa-signature text-warning fs-5 me-3"></i>
+                    <input type="text" name="nombre" class="form-control border-0 bg-transparent py-2 shadow-none" placeholder="Ej. Tutoría personalizada de Cálculo" required>
+                </div>
+            </div>
+
+            <!-- Materia -->
+            <div class="col-md-6">
+                <label class="form-label text-muted small fw-bold text-uppercase ms-2">Materia</label>
+                <div class="custom-input-group d-flex align-items-center px-3 py-2">
+                    <i class="fa-solid fa-book text-warning fs-5 me-3"></i>
+                    <select name="id_materia" class="form-select border-0 bg-transparent py-2 shadow-none" required>
+                        <option value="">Selecciona materia...</option>
+                        {% for m in materias %}
+                            <option value="{{ m.id_materia }}">{{ m.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Precio (tokens) -->
+            <div class="col-md-6">
+                <label class="form-label text-muted small fw-bold text-uppercase ms-2">Precio en Tokens</label>
+                <div class="custom-input-group d-flex align-items-center px-3 py-2">
+                    <i class="fa-solid fa-coins text-warning fs-5 me-3"></i>
+                    <input type="number" name="precio_tokens" class="form-control border-0 bg-transparent py-2 shadow-none" min="1" placeholder="Ej. 30" required>
+                </div>
+            </div>
+
+            <!-- Modalidad -->
+            <div class="col-md-6">
+                <label class="form-label text-muted small fw-bold text-uppercase ms-2">Modalidad</label>
+                <div class="custom-input-group d-flex align-items-center px-3 py-2">
+                    <i class="fa-solid fa-laptop-file text-warning fs-5 me-3"></i>
+                    <select name="modalidad" class="form-select border-0 bg-transparent py-2 shadow-none" required>
+                        <option value="Virtual">Virtual</option>
+                        <option value="Presencial">Presencial</option>
+                        <option value="Híbrido">Híbrido</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Descripción -->
+            <div class="col-12">
+                <label class="form-label text-muted small fw-bold text-uppercase ms-2">Descripción (Opcional)</label>
+                <div class="custom-input-group px-3 py-2">
+                    <textarea name="descripcion" class="form-control border-0 bg-transparent py-2 shadow-none" rows="3" placeholder="Detalla qué temas abordarán, metodología o requisitos previos..."></textarea>
+                </div>
+            </div>
+
+            <!-- Botón Crear Servicio -->
+            <div class="col-12 mt-4">
+                <button type="submit" class="btn btn-gradient w-100 rounded-pill py-3 fw-bold fs-6 shadow-sm">
+                    <i class="fa-solid fa-circle-check me-2"></i> Crear servicio
+                </button>
+            </div>
+
+        </form>
+        {% endif %}
+
     </div>
-</form>
-{% endif %}
+</div>
 
 {% endblock %}

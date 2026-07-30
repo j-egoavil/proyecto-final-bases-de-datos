@@ -1,56 +1,198 @@
 {% extends "base.html" %}
 {% block title %}Mi dashboard{% endblock %}
+
 {% block content %}
+<style>
+    /* Fondo con gradiente cálido */
+    body {
+        background: linear-gradient(135deg, #fcfaf8 0%, #ede3da 100%) !important;
+        min-height: 100vh;
+    }
 
-<h2 class="mb-4">Hola, {{ usuario.nombre }}</h2>
+    /* Banner de bienvenida */
+    .dashboard-hero {
+        background: rgba(255, 255, 255, 0.6);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        border-radius: 2rem;
+        padding: 2.5rem 3rem;
+        box-shadow: 0 10px 30px rgba(139, 69, 19, 0.05);
+        margin-bottom: 2.5rem;
+    }
 
-<div class="row g-3 mb-5">
-    <div class="col-md-4">
-        <div class="card text-center h-100">
-            <div class="card-body">
-                <h6 class="text-muted">Saldo actual</h6>
-                <h2 class="text-warning">{{ saldo }} tokens</h2>
-            </div>
-        </div>
+    .hero-title {
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        background: linear-gradient(135deg, #5c2c0b, #d97706);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Tarjetas de estadísticas estilo Glass */
+    .stat-card {
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        border-radius: 1.5rem;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.03);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 25px rgba(139, 69, 19, 0.08);
+    }
+
+    /* Contenedor de la tabla */
+    .table-container {
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        border-radius: 1.5rem;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.03);
+        overflow: hidden;
+        padding: 1.5rem;
+        margin-bottom: 2.5rem;
+    }
+
+    /* Estilo de la tabla personalizada */
+    .custom-table {
+        margin-bottom: 0;
+        vertical-align: middle;
+    }
+    .custom-table th {
+        background: transparent !important;
+        color: #5c2c0b;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid rgba(139, 69, 19, 0.1) !important;
+        padding: 1rem;
+    }
+    .custom-table td {
+        background: transparent !important;
+        padding: 1rem;
+        color: #2c1810;
+        font-weight: 500;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+    }
+
+    /* Botón principal de acción */
+    .btn-gradient {
+        background: linear-gradient(135deg, #d97706, #b45309);
+        color: white;
+        border: none;
+        transition: all 0.3s ease;
+    }
+    .btn-gradient:hover {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px -5px rgba(217, 119, 6, 0.4);
+    }
+</style>
+
+<!-- Banner Principal -->
+<div class="dashboard-hero d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+    <div>
+        <span class="badge bg-white text-warning border px-3 py-2 rounded-pill shadow-sm mb-2">
+            <i class="fa-solid fa-house me-1"></i> Panel de Control
+        </span>
+        <h1 class="hero-title display-6 mb-1">Hola, {{ usuario.nombre }}</h1>
+        <p class="text-secondary mb-0">Bienvenido de nuevo a tu espacio académico.</p>
     </div>
-    <div class="col-md-4">
-        <div class="card text-center h-100">
-            <div class="card-body">
-                <h6 class="text-muted">Próximas tutorías</h6>
-                <h2>{{ reuniones|length }}</h2>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card text-center h-100">
-            <div class="card-body">
-                <h6 class="text-muted">Área</h6>
-                <h5 class="mt-2">{{ usuario.area }}</h5>
-            </div>
-        </div>
+    <div>
+        <a href="{{ url_for('servicios.buscar') }}" class="btn btn-gradient rounded-pill px-4 py-3 fw-bold shadow-sm">
+            <i class="fa-solid fa-magnifying-glass me-2"></i> Buscar servicios
+        </a>
     </div>
 </div>
 
-<h5>Próximas reuniones</h5>
-<table class="table table-striped">
-    <thead>
-        <tr><th>Fecha</th><th>Hora</th><th>Tutor</th><th>Servicio</th><th>Materia</th></tr>
-    </thead>
-    <tbody>
-        {% for r in reuniones %}
-        <tr>
-            <td>{{ r.fecha }}</td>
-            <td>{{ r.hora_inicio }}</td>
-            <td>{{ r.tutor_nombre }}</td>
-            <td>{{ r.servicio_nombre }}</td>
-            <td>{{ r.materia_nombre }}</td>
-        </tr>
-        {% else %}
-        <tr><td colspan="5" class="text-muted">No tienes tutorías agendadas.</td></tr>
-        {% endfor %}
-    </tbody>
-</table>
+<!-- Tarjetas de Estadísticas -->
+<div class="row g-4 mb-5">
+    
+    <!-- Saldo -->
+    <div class="col-md-4">
+        <div class="card stat-card text-center h-100 p-3">
+            <div class="card-body d-flex flex-column justify-content-center">
+                <div class="text-warning mb-2 fs-3">
+                    <i class="fa-solid fa-coins"></i>
+                </div>
+                <h6 class="text-muted small fw-bold text-uppercase">Saldo actual</h6>
+                <h2 class="text-dark fw-bold mb-0 mt-1">{{ saldo }} <span class="fs-6 text-muted fw-normal">tokens</span></h2>
+            </div>
+        </div>
+    </div>
 
-<a href="{{ url_for('servicios.buscar') }}" class="btn btn-primary">Buscar servicios</a>
+    <!-- Próximas tutorías -->
+    <div class="col-md-4">
+        <div class="card stat-card text-center h-100 p-3">
+            <div class="card-body d-flex flex-column justify-content-center">
+                <div class="text-primary mb-2 fs-3">
+                    <i class="fa-solid fa-calendar-check"></i>
+                </div>
+                <h6 class="text-muted small fw-bold text-uppercase">Próximas tutorías</h6>
+                <h2 class="text-dark fw-bold mb-0 mt-1">{{ reuniones|length }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <!-- Área -->
+    <div class="col-md-4">
+        <div class="card stat-card text-center h-100 p-3">
+            <div class="card-body d-flex flex-column justify-content-center">
+                <div class="text-danger mb-2 fs-3">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <h6 class="text-muted small fw-bold text-uppercase">Área</h6>
+                <h5 class="text-dark fw-bold mb-0 mt-1">{{ usuario.area }}</h5>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Tabla de Próximas Reuniones -->
+<div class="mb-3 px-2">
+    <h4 class="fw-bold text-dark mb-1">Próximas reuniones</h4>
+    <p class="text-secondary small">Tus tutorías agendadas pendientes por realizar.</p>
+</div>
+
+<div class="table-container">
+    <div class="table-responsive">
+        <table class="table custom-table">
+            <thead>
+                <tr>
+                    <th><i class="fa-solid fa-calendar me-1"></i> Fecha</th>
+                    <th><i class="fa-solid fa-clock me-1"></i> Hora</th>
+                    <th><i class="fa-solid fa-chalkboard-user me-1"></i> Tutor</th>
+                    <th><i class="fa-solid fa-book me-1"></i> Servicio</th>
+                    <th><i class="fa-solid fa-bookmark me-1"></i> Materia</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in reuniones %}
+                <tr>
+                    <td class="fw-bold">{{ r.fecha }}</td>
+                    <td>{{ r.hora_inicio }}</td>
+                    <td>{{ r.tutor_nombre }}</td>
+                    <td><span class="badge bg-light text-dark border px-2 py-1">{{ r.servicio_nombre }}</span></td>
+                    <td class="text-primary fw-semibold">{{ r.materia_nombre }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="text-center py-5 text-muted">
+                        <i class="fa-solid fa-face-smile fa-2x mb-2 opacity-50 d-block"></i>
+                        No tienes tutorías agendadas actualmente. ¡Anímate a buscar una!
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 
 {% endblock %}
