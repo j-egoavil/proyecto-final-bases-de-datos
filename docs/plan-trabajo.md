@@ -48,14 +48,14 @@
 
 - [x] `base.html` — layout con navbar (segun rol), muestra saldo tokens
 - [x] `auth/login.html` + `registro.html`
-- [ ] `usuario/dashboard.html` — tarjeta de saldo, reuniones pendientes
-- [ ] `usuario/perfil.html` — datos, historial
-- [ ] `tutor/postular.html` + `mis-servicios.html`
+- [x] `usuario/dashboard.html` — tarjeta de saldo, reuniones pendientes
+- [x] `usuario/perfil.html` — datos, historial
+- [x] `tutor/postular.html` + `mis-servicios.html`
 - [x] `servicios/buscar.html` — filtros por materia, modalidad, precio
 - [x] `servicios/detalle.html` — boton "Agendar"
 - [ ] `reuniones/agendar.html` — fecha, hora, tema
 - [ ] `admin/dashboard.html` — metricas, ranking tutores, gestion baneos
-- [ ] `static/css/style.css` + `static/js/main.js`
+- [x] `static/css/style.css` + `static/js/main.js`
 
 ---
 
