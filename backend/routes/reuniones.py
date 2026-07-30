@@ -1,5 +1,5 @@
 import mysql.connector
-from datetime import date
+from datetime import datetime, date
 
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 
@@ -179,6 +179,12 @@ def agendar(id_servicio):
             hora_fin = request.form.get("hora_fin")
             tema = request.form.get("tema") or None
 
+            fecha_hora_inicio = datetime.strptime(f"{fecha} {hora_inicio}", "%Y-%m-%d %H:%M")
+
+            if fecha_hora_inicio <= datetime.now():
+                flash("No puedes agendar una tutoría en una fecha u hora que ya pasó.", "error")
+                return render_template("reuniones/agendar.html", servicio=servicio, hoy=date.today().isoformat())
+
             try:
                 agendar_reunion(
                     conn,
@@ -201,4 +207,4 @@ def agendar(id_servicio):
     finally:
         close_db(conn)
 
-    return render_template("reuniones/agendar.html", servicio=servicio)
+    return render_template("reuniones/agendar.html", servicio=servicio, hoy=date.today().isoformat())

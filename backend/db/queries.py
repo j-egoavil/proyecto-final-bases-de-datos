@@ -284,8 +284,11 @@ def obtener_reuniones_estudiante(conn, id_estudiante, solo_pendientes=False):
         WHERE r.id_estudiante = %s
     """
     if solo_pendientes:
-        query += " AND r.estado = 'Agendada'"
-    query += " ORDER BY r.fecha DESC, r.hora_inicio DESC"
+        # ya no basta con el estado, también debe ser en el futuro
+        query += " AND r.estado = 'Agendada' AND TIMESTAMP(r.fecha, r.hora_inicio) > NOW()"
+        query += " ORDER BY r.fecha ASC, r.hora_inicio ASC"  # próximas primero, no las más recientes
+    else:
+        query += " ORDER BY r.fecha DESC, r.hora_inicio DESC"
     return fetch_all(conn, query, (id_estudiante,))
 
 
@@ -300,8 +303,10 @@ def obtener_reuniones_tutor(conn, id_tutor, solo_pendientes=False):
         WHERE r.id_tutor = %s
     """
     if solo_pendientes:
-        query += " AND r.estado = 'Agendada'"
-    query += " ORDER BY r.fecha DESC, r.hora_inicio DESC"
+        query += " AND r.estado = 'Agendada' AND TIMESTAMP(r.fecha, r.hora_inicio) > NOW()"
+        query += " ORDER BY r.fecha ASC, r.hora_inicio ASC"
+    else:
+        query += " ORDER BY r.fecha DESC, r.hora_inicio DESC"
     return fetch_all(conn, query, (id_tutor,))
 
 

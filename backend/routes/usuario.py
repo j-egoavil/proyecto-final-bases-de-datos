@@ -25,7 +25,7 @@ def dashboard():
         
         reuniones = obtener_reuniones_estudiante(conn, id_usuario, solo_pendientes=True)
         
-        reuniones = sorted(reuniones, key=lambda r: (r["fecha"], r["hora_inicio"]))
+        
     finally:
         close_db(conn)
 
