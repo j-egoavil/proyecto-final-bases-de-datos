@@ -391,6 +391,15 @@ def crear_baneo(conn, id_usuario, motivo, fecha_inicio, fecha_fin):
     conn.commit()
 
 
+def buscar_usuarios_admin(conn, termino, limit=10):
+    query = """
+        SELECT id_usuario, nombre, email, rol 
+        FROM usuario 
+        WHERE nombre LIKE %s OR email LIKE %s
+        LIMIT %s
+    """
+    return fetch_all(conn, query, (f"%{termino}%", f"%{termino}%", limit))
+
 # =====================================================================
 # MOVIMIENTOS DE TOKENS
 # =====================================================================

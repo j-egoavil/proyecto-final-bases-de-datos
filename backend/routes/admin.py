@@ -8,8 +8,6 @@ from backend.db.queries import (
     obtener_desempeno_tutores,
     obtener_baneos_usuario,
     crear_baneo,
-    obtener_estudiantes,
-    obtener_tutores,
 )
 from backend.services.tokens import obtener_balance_historico
 
@@ -61,19 +59,32 @@ def baneos():
     if not _admin_required():
         return redirect(url_for("auth.login"))
 
+    # Capturamos el término de búsqueda para evitar cargar miles de registros en select masivos
+    busqueda = request.args.get("q", "").strip()
+
     conn = get_db()
     try:
         baneos_activos = _obtener_baneos_activos(conn)
-        estudiantes = obtener_estudiantes(conn)
-        tutores_list = obtener_tutores(conn)
+        
+        from backend.db.connection import fetch_all
+        if busqueda:
+            usuarios_encontrados = fetch_all(conn, """
+                SELECT id_usuario, nombre, email, rol 
+                FROM usuario 
+                WHERE nombre LIKE %s OR email LIKE %s
+                LIMIT 10
+            """, (f"%{busqueda}%", f"%{busqueda}%"))
+        else:
+            usuarios_encontrados = []
+
     finally:
         close_db(conn)
 
     return render_template(
         "admin/baneos.html",
         baneos=baneos_activos,
-        estudiantes=estudiantes,
-        tutores=tutores_list,
+        usuarios=usuarios_encontrados,
+        busqueda=busqueda
     )
 
 
