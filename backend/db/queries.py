@@ -146,8 +146,13 @@ def obtener_materias_tutor(conn, id_tutor):
     """, (id_tutor,))
 
 
-def obtener_desempeno_tutores(conn):
-    return fetch_all(conn, "SELECT * FROM vw_desempeno_tutores")
+def obtener_desempeno_tutores(conn, limit=50, offset=0):
+    query = """
+        SELECT * 
+        FROM vw_desempeno_tutores
+        LIMIT %s OFFSET %s
+    """
+    return fetch_all(conn, query, (limit, offset))
 
 def obtener_perfil_tutor_completo(conn, id_tutor):
     """Usa vw_perfil_tutor: una fila por cada materia que domina el tutor.

@@ -31,10 +31,16 @@ def dashboard():
     if not _admin_required():
         return redirect(url_for("auth.login"))
 
+    # Capturar página para la paginación del ranking de tutores
+    page = request.args.get("page", 1, type=int)
+    per_page = 50
+    offset = (page - 1) * per_page
+
     conn = get_db()
     try:
         estadisticas = obtener_estadisticas_generales(conn)
-        desempeno = obtener_desempeno_tutores(conn)
+        # Aplicamos límite y offset a la función de desempeño
+        desempeno = obtener_desempeno_tutores(conn, limit=per_page, offset=offset)
         balance = obtener_balance_historico()
         baneos = _obtener_baneos_activos(conn)
     finally:
@@ -46,6 +52,7 @@ def dashboard():
         desempeno=desempeno,
         balance=balance,
         baneos=baneos,
+        page=page  # Pasamos la página actual a la plantilla HTML
     )
 
 

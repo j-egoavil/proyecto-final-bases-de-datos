@@ -1,41 +1,264 @@
 {% extends "base.html" %}
 {% block title %}Panel de administración{% endblock %}
+
 {% block content %}
+<style>
+    /* Fondo con gradiente cálido */
+    body {
+        background: linear-gradient(135deg, #fcfaf8 0%, #ede3da 100%) !important;
+        min-height: 100vh;
+    }
 
-<h2 class="mb-4">Panel de administración</h2>
+    /* Contenedor principal */
+    .admin-wrapper {
+        max-width: 1200px;
+        margin: 2rem auto;
+    }
 
-<div class="row g-3 mb-5">
-    <div class="col-md-3"><div class="card text-center"><div class="card-body"><h6 class="text-muted">Usuarios</h6><h3>{{ estadisticas.total_usuarios }}</h3></div></div></div>
-    <div class="col-md-3"><div class="card text-center"><div class="card-body"><h6 class="text-muted">Tutores</h6><h3>{{ estadisticas.total_tutores }}</h3></div></div></div>
-    <div class="col-md-3"><div class="card text-center"><div class="card-body"><h6 class="text-muted">Tutorías finalizadas</h6><h3>{{ estadisticas.total_reuniones_finalizadas }}</h3></div></div></div>
-    <div class="col-md-3"><div class="card text-center"><div class="card-body"><h6 class="text-muted">Baneos activos</h6><h3>{{ estadisticas.baneos_activos }}</h3></div></div></div>
+    /* Banner superior */
+    .admin-hero {
+        background: rgba(255, 255, 255, 0.6);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        border-radius: 2rem;
+        padding: 2.5rem 3rem;
+        box-shadow: 0 10px 30px rgba(139, 69, 19, 0.05);
+        margin-bottom: 2.5rem;
+    }
+
+    .hero-title {
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        background: linear-gradient(135deg, #5c2c0b, #d97706);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Tarjetas de estadísticas estilo Glass */
+    .stat-card {
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        border-radius: 1.5rem;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.03);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 25px rgba(139, 69, 19, 0.08);
+    }
+
+    /* Contenedores de las tablas estilo Glass */
+    .table-container {
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        border-radius: 2rem;
+        box-shadow: 0 15px 35px rgba(139, 69, 19, 0.08);
+        overflow: hidden;
+        padding: 2rem;
+        margin-bottom: 3rem;
+    }
+
+    /* Estilo de la tabla personalizada */
+    .custom-table {
+        margin-bottom: 0;
+        vertical-align: middle;
+    }
+    .custom-table th {
+        background: transparent !important;
+        color: #5c2c0b;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid rgba(139, 69, 19, 0.1) !important;
+        padding: 1rem;
+    }
+    .custom-table td {
+        background: transparent !important;
+        padding: 1rem;
+        color: #2c1810;
+        font-weight: 500;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+    }
+
+    /* Botón de gradiente para paginación */
+    .btn-gradient {
+        background: linear-gradient(135deg, #d97706, #b45309);
+        color: white;
+        border: none;
+        transition: all 0.3s ease;
+    }
+    .btn-gradient:hover {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px -5px rgba(217, 119, 6, 0.4);
+    }
+</style>
+
+<div class="admin-wrapper">
+    
+    <!-- Banner Principal -->
+    <div class="admin-hero d-flex justify-content-between align-items-center">
+        <div>
+            <span class="badge bg-white text-danger border px-3 py-2 rounded-pill shadow-sm mb-2">
+                <i class="fa-solid fa-shield-halved me-1"></i> Control Total
+            </span>
+            <h1 class="hero-title display-6 mb-1">Panel de Administración</h1>
+            <p class="text-secondary mb-0">Métricas generales del sistema, rendimiento de tutores y gestión de baneos.</p>
+        </div>
+    </div>
+
+    <!-- Tarjetas de Estadísticas -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="card stat-card text-center h-100 p-3">
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <div class="text-primary mb-2 fs-3"><i class="fa-solid fa-users"></i></div>
+                    <h6 class="text-muted small fw-bold text-uppercase">Usuarios</h6>
+                    <h2 class="text-dark fw-bold mb-0 mt-1">{{ estadisticas.total_usuarios }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card stat-card text-center h-100 p-3">
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <div class="text-warning mb-2 fs-3"><i class="fa-solid fa-chalkboard-user"></i></div>
+                    <h6 class="text-muted small fw-bold text-uppercase">Tutores</h6>
+                    <h2 class="text-dark fw-bold mb-0 mt-1">{{ estadisticas.total_tutores }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card stat-card text-center h-100 p-3">
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <div class="text-success mb-2 fs-3"><i class="fa-solid fa-circle-check"></i></div>
+                    <h6 class="text-muted small fw-bold text-uppercase">Finalizadas</h6>
+                    <h2 class="text-dark fw-bold mb-0 mt-1">{{ estadisticas.total_reuniones_finalizadas }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card stat-card text-center h-100 p-3">
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <div class="text-danger mb-2 fs-3"><i class="fa-solid fa-ban"></i></div>
+                    <h6 class="text-muted small fw-bold text-uppercase">Baneos activos</h6>
+                    <h2 class="text-dark fw-bold mb-0 mt-1">{{ estadisticas.baneos_activos }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección Ranking de Tutores -->
+    <div class="mb-3 px-2">
+        <h4 class="fw-bold text-dark mb-0"><i class="fa-solid fa-ranking-star text-warning me-2"></i> Ranking de Tutores (Desempeño)</h4>
+    </div>
+
+    <div class="table-container">
+        <div class="table-responsive">
+            <table class="table custom-table">
+                <thead>
+                    <tr>
+                        <th>Tutor</th>
+                        <th>Área</th>
+                        <th>Calificación</th>
+                        <th>Materias</th>
+                        <th>Servicios</th>
+                        <th>Completadas</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in desempeno %}
+                    <tr>
+                        <td class="fw-bold text-dark"><i class="fa-solid fa-user-graduate me-1 text-muted"></i> {{ t.tutor }}</td>
+                        <td><span class="badge bg-light text-secondary border">{{ t.area }}</span></td>
+                        <td>
+                            <span class="text-warning fw-bold">
+                                <i class="fa-solid fa-star"></i> {{ "%.1f"|format(t.calif_promedio) }}
+                            </span>
+                        </td>
+                        <td>{{ t.materias_aprobadas }}</td>
+                        <td>{{ t.servicios_activos }}</td>
+                        <td class="fw-semibold text-success">{{ t.tutorias_completadas }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">No hay registros de tutores todavía.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- PAGINACIÓN PARA EL RANKING -->
+        <!-- PAGINACIÓN PARA EL RANKING -->
+        <div class="d-flex justify-content-center mt-4 align-items-center gap-3">
+            {% set current_page = page|default(1) %}
+            
+            {% if current_page > 1 %}
+            <a href="{{ url_for('admin.dashboard', page=current_page-1) }}" class="btn bg-white border rounded-pill px-4 py-2 shadow-sm text-dark fw-semibold">
+                <i class="fa-solid fa-arrow-left me-2"></i> Anterior
+            </a>
+            {% endif %}
+
+            <span class="badge bg-white text-secondary border rounded-pill px-3 py-2 shadow-sm">
+                Página {{ current_page }}
+            </span>
+
+            {% if desempeno|length == 50 %}
+            <a href="{{ url_for('admin.dashboard', page=current_page+1) }}" class="btn btn-gradient rounded-pill px-4 py-2 shadow-sm fw-semibold">
+                Siguiente <i class="fa-solid fa-arrow-right ms-2"></i>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Sección Baneos Activos -->
+    <div class="mb-3 px-2 d-flex justify-content-between align-items-center">
+        <h4 class="fw-bold text-dark mb-0"><i class="fa-solid fa-triangle-exclamation text-danger me-2"></i> Baneos Activos</h4>
+        <a href="{{ url_for('admin.baneos') }}" class="btn btn-outline-danger rounded-pill px-4 py-2 fw-semibold shadow-sm">
+            <i class="fa-solid fa-user-gear me-1"></i> Gestionar baneos
+        </a>
+    </div>
+
+    <div class="table-container">
+        <div class="table-responsive">
+            <table class="table custom-table">
+                <thead>
+                    <tr>
+                        <th>Usuario</th>
+                        <th>Motivo</th>
+                        <th>Hasta la fecha</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for b in baneos %}
+                    <tr>
+                        <td class="fw-bold text-dark"><i class="fa-solid fa-user-slash me-1 text-danger"></i> {{ b.nombre }}</td>
+                        <td class="text-secondary">{{ b.motivo }}</td>
+                        <td><span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3 py-2 rounded-pill">{{ b.fecha_fin }}</span></td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="3" class="text-center py-5 text-muted">
+                            <i class="fa-solid fa-face-smile fa-2x mb-2 opacity-50 d-block"></i>
+                            ¡Excelente! No hay baneos activos en este momento.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
 </div>
-
-<h5>Ranking de tutores</h5>
-<table class="table table-striped mb-5">
-    <thead><tr><th>Tutor</th><th>Área</th><th>Calificación</th><th>Materias</th><th>Servicios</th><th>Completadas</th></tr></thead>
-    <tbody>
-        {% for t in desempeno %}
-        <tr>
-            <td>{{ t.tutor }}</td><td>{{ t.area }}</td><td>{{ "%.1f"|format(t.calif_promedio) }}</td>
-            <td>{{ t.materias_aprobadas }}</td><td>{{ t.servicios_activos }}</td><td>{{ t.tutorias_completadas }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-
-<h5>Baneos activos</h5>
-<table class="table table-striped mb-4">
-    <thead><tr><th>Usuario</th><th>Motivo</th><th>Hasta</th></tr></thead>
-    <tbody>
-        {% for b in baneos %}
-        <tr><td>{{ b.nombre }}</td><td>{{ b.motivo }}</td><td>{{ b.fecha_fin }}</td></tr>
-        {% else %}
-        <tr><td colspan="3" class="text-muted">Sin baneos activos.</td></tr>
-        {% endfor %}
-    </tbody>
-</table>
-
-<a href="{{ url_for('admin.baneos') }}" class="btn btn-outline-danger">Gestionar baneos</a>
 
 {% endblock %}
