@@ -55,6 +55,12 @@ def agendar(id_servicio):
     conn = get_db()
     try:
         servicio = obtener_servicio_por_id(conn, id_servicio)
+
+        # un tutor no puede agendar su propio servicio
+        if session["id_usuario"] == servicio["id_tutor"]:
+            flash("No puedes agendar una tutoría contigo mismo.", "error")
+            return redirect(url_for("servicios.detalle", id_servicio=id_servicio))
+
         agendar_reunion(
             conn,
             id_estudiante=session["id_usuario"],
@@ -66,7 +72,6 @@ def agendar(id_servicio):
         )
         flash("¡Tutoría agendada con éxito!", "success")
     except mysql.connector.Error as e:
-        # Captura los SIGNAL SQLSTATE '45000' del procedimiento (baneo o saldo insuficiente)
         flash(f"No se pudo agendar: {e.msg}", "error")
     finally:
         close_db(conn)

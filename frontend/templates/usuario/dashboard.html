@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Mi dashboard{% endblock %}
+{% block content %}
+
+<h2 class="mb-4">Hola, {{ usuario.nombre }}</h2>
+
+<div class="row g-3 mb-5">
+    <div class="col-md-4">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <h6 class="text-muted">Saldo actual</h6>
+                <h2 class="text-warning">{{ saldo }} tokens</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <h6 class="text-muted">Próximas tutorías</h6>
+                <h2>{{ reuniones|length }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <h6 class="text-muted">Área</h6>
+                <h5 class="mt-2">{{ usuario.area }}</h5>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h5>Próximas reuniones</h5>
+<table class="table table-striped">
+    <thead>
+        <tr><th>Fecha</th><th>Hora</th><th>Tutor</th><th>Servicio</th><th>Materia</th></tr>
+    </thead>
+    <tbody>
+        {% for r in reuniones %}
+        <tr>
+            <td>{{ r.fecha }}</td>
+            <td>{{ r.hora_inicio }}</td>
+            <td>{{ r.tutor_nombre }}</td>
+            <td>{{ r.servicio_nombre }}</td>
+            <td>{{ r.materia_nombre }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-muted">No tienes tutorías agendadas.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<a href="{{ url_for('servicios.buscar') }}" class="btn btn-primary">Buscar servicios</a>
+
+{% endblock %}

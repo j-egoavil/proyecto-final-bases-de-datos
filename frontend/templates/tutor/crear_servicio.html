@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Crear servicio{% endblock %}
+{% block content %}
+
+<h2 class="mb-4">Crear nuevo servicio</h2>
+
+{% if not materias %}
+    <div class="alert alert-warning">
+        No tienes materias aprobadas registradas todavía, así que no puedes ofrecer servicios.
+    </div>
+{% else %}
+<form method="POST" action="{{ url_for('tutor.crear_nuevo_servicio') }}" class="row g-3">
+    <div class="col-md-6">
+        <label class="form-label">Nombre del servicio</label>
+        <input type="text" name="nombre" class="form-control" required>
+    </div>
+
+    <div class="col-md-6">
+        <label class="form-label">Materia</label>
+        <select name="id_materia" class="form-select" required>
+            <option value="">Selecciona...</option>
+            {% for m in materias %}
+                <option value="{{ m.id_materia }}">{{ m.nombre }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="col-md-3">
+        <label class="form-label">Precio (tokens)</label>
+        <input type="number" name="precio_tokens" class="form-control" min="1" required>
+    </div>
+
+    <div class="col-md-4">
+        <label class="form-label">Modalidad</label>
+        <select name="modalidad" class="form-select" required>
+            <option value="Virtual">Virtual</option>
+            <option value="Presencial">Presencial</option>
+            <option value="Híbrido">Híbrido</option>
+        </select>
+    </div>
+
+    <div class="col-12">
+        <label class="form-label">Descripción</label>
+        <textarea name="descripcion" class="form-control" rows="2"></textarea>
+    </div>
+
+    <div class="col-12">
+        <button type="submit" class="btn btn-success">Crear servicio</button>
+    </div>
+</form>
+{% endif %}
+
+{% endblock %}

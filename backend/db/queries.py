@@ -7,12 +7,12 @@ from backend.db.connection import fetch_one, fetch_all, execute, call_proc
 
 def crear_usuario(conn, nombre, email, password, area, rol='estudiante'):
     """Inserta un usuario base (sin estudiante/tutor aun)."""
-    execute(conn, """
+    cursor = execute(conn, """
         INSERT INTO usuario (nombre, email, password, area, rol, saldo_tokens, fecha_creacion)
         VALUES (%s, %s, %s, %s, %s, 0, CURRENT_DATE)
     """, (nombre, email, password, area, rol))
     conn.commit()
-    return conn.insert_id()
+    return cursor.lastrowid  
 
 
 def registrar_usuario_completo(conn, nombre, email, password, area, semestre):
@@ -194,12 +194,12 @@ def obtener_prerrequisito(conn, id_materia):
 # =====================================================================
 
 def crear_servicio(conn, id_tutor, id_materia, nombre, precio_tokens, modalidad, descripcion):
-    execute(conn, """
+    cursor = execute(conn, """
         INSERT INTO servicio (id_tutor, id_materia, nombre, precio_tokens, modalidad, descripcion)
         VALUES (%s, %s, %s, %s, %s, %s)
     """, (id_tutor, id_materia, nombre, precio_tokens, modalidad, descripcion))
     conn.commit()
-    return conn.insert_id()
+    return cursor.lastrowid  
 
 
 def obtener_servicios(conn, id_materia=None, modalidad=None, precio_max=None):

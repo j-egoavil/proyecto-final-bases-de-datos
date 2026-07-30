@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Postularme como tutor{% endblock %}
+{% block content %}
+
+<h2 class="mb-4">Postularme como tutor</h2>
+
+<form method="POST" action="{{ url_for('tutor.postular') }}">
+    <div class="mb-3">
+        <label class="form-label">Descripción (preséntate a tus futuros estudiantes)</label>
+        <textarea name="descripcion" class="form-control" rows="3" required></textarea>
+    </div>
+
+    <h5>Materias aprobadas (nota ≥ 4.0)</h5>
+    <div id="materias-container">
+        <div class="row g-2 mb-2 fila-materia align-items-end">
+            <div class="col-md-6">
+                <label class="form-label">Materia</label>
+                <select name="id_materia[]" class="form-select" required>
+                    <option value="">Selecciona...</option>
+                    {% for materia in materias %}
+                        <option value="{{ materia.id_materia }}">{{ materia.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Nota obtenida</label>
+                <input type="number" name="nota[]" class="form-control"
+                       min="4.0" max="5.0" step="0.1" required>
+            </div>
+            <div class="col-md-2">
+                <button type="button" class="btn btn-outline-danger btn-quitar-materia w-100">
+                    Quitar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <button type="button" id="btn-agregar-materia" class="btn btn-outline-secondary btn-sm mb-4">
+        + Agregar otra materia
+    </button>
+
+    <div>
+        <button type="submit" class="btn btn-primary">Enviar postulación</button>
+    </div>
+</form>
+
+{% endblock %}

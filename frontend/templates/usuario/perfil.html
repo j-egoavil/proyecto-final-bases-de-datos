@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Mi perfil{% endblock %}
+{% block content %}
+
+<h2 class="mb-4">Mi perfil</h2>
+
+<form method="POST" action="{{ url_for('usuario.perfil') }}" class="row g-3 mb-5">
+    <div class="col-md-6">
+        <label class="form-label">Nombre</label>
+        <input type="text" name="nombre" class="form-control" value="{{ usuario.nombre }}" required>
+    </div>
+    <div class="col-md-6">
+        <label class="form-label">Área</label>
+        <select name="area" class="form-select">
+            {% for a in ["Ing. Sistemas", "Ing. Industrial", "Ing. Civil", "Ing. Mecánica", "Ing. Mecatrónica", "Ing. Electrónica"] %}
+                <option value="{{ a }}" {% if usuario.area == a %}selected{% endif %}>{{ a }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-12">
+        <button type="submit" class="btn btn-primary">Guardar cambios</button>
+    </div>
+</form>
+
+<h5>Historial de movimientos de tokens</h5>
+<table class="table table-striped">
+    <thead>
+        <tr><th>Fecha</th><th>Cantidad</th></tr>
+    </thead>
+    <tbody>
+        {% for m in historial %}
+        <tr>
+            <td>{{ m.fecha }}</td>
+            <td class="{{ 'text-success' if m.cantidad > 0 else 'text-danger' }}">
+                {{ "+" if m.cantidad > 0 else "" }}{{ m.cantidad }}
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="2" class="text-muted">Sin movimientos registrados.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

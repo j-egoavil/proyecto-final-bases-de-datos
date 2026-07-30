@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Mis servicios{% endblock %}
+{% block content %}
+
+<h2 class="mb-1">Mis servicios</h2>
+<p class="text-muted">
+    {{ perfil[0].nombre }} — {{ perfil[0].area }} —
+    Calificación: {{ "%.1f"|format(perfil[0].calif_promedio) }} / 5
+</p>
+
+<h6>Materias aprobadas como tutor:</h6>
+<ul>
+    {% for fila in perfil %}
+        <li>{{ fila.materia }}</li>
+    {% endfor %}
+</ul>
+
+<a href="{{ url_for('tutor.agregar_materia') }}" class="btn btn-outline-secondary btn-sm mb-3">
+    + Agregar otra materia que domino
+</a>
+
+<a href="{{ url_for('tutor.crear_nuevo_servicio') }}" class="btn btn-outline-primary btn-sm mb-4">
+    + Crear nuevo servicio
+</a>
+
+<table class="table table-striped">
+    <thead>
+        <tr><th>Nombre</th><th>Materia</th><th>Modalidad</th><th>Precio</th></tr>
+    </thead>
+    <tbody>
+        {% for s in servicios %}
+        <tr>
+            <td>{{ s.nombre }}</td>
+            <td>{{ s.materia_nombre }}</td>
+            <td>{{ s.modalidad }}</td>
+            <td>{{ s.precio_tokens }} tokens</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" class="text-muted">Aún no tienes servicios creados.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}
