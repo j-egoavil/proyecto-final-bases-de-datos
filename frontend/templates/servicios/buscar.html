@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+{% block title %}Buscar servicios{% endblock %}
+
+{% block content %}
+<style>
+    /* Fondo con gradiente cálido */
+    body {
+        background: linear-gradient(135deg, #fcfaf8 0%, #ede3da 100%) !important;
+        min-height: 100vh;
+    }
+
+    /* Contenedor del título tipo Vidrio Esmerilado (Glassmorphism) */
+    .hero-glass {
+        padding: 3.5rem 2rem;
+        text-align: center;
+        border-radius: 2rem;
+        background: rgba(255, 255, 255, 0.4);
+        box-shadow: 0 8px 32px 0 rgba(139, 69, 19, 0.05);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        margin-bottom: 3rem;
+        margin-top: 1rem;
+    }
+
+    .badge-hero {
+        background: #ffffff;
+        color: #d97706;
+        padding: 0.5rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 800;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        box-shadow: 0 4px 15px rgba(217, 119, 6, 0.15);
+        display: inline-block;
+        margin-bottom: 1.5rem;
+    }
+
+    .title-playful {
+        font-weight: 900;
+        font-size: 3rem;
+        letter-spacing: -1.5px;
+        background: linear-gradient(45deg, #5c2c0b, #d97706, #5c2c0b);
+        background-size: 200% auto;
+        color: transparent;
+        -webkit-background-clip: text;
+        background-clip: text;
+        animation: shine 4s linear infinite;
+    }
+
+    @keyframes shine {
+        to { background-position: 200% center; }
+    }
+
+    /* Panel de Filtros más suave */
+    .filter-panel {
+        background-color: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(5px);
+        border-radius: 1.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+    }
+    
+    /* Botones */
+    .btn-gradient {
+        background: linear-gradient(135deg, #d97706, #b45309);
+        color: white;
+        border: none;
+        transition: all 0.3s ease;
+    }
+    .btn-gradient:hover {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px -5px rgba(217, 119, 6, 0.4);
+    }
+
+    /* Estilo Masonry (Pinterest) */
+    .masonry-grid {
+        column-count: 1;
+        column-gap: 1.5rem;
+    }
+    @media (min-width: 768px) {
+        .masonry-grid { column-count: 2; }
+    }
+    @media (min-width: 992px) {
+        .masonry-grid { column-count: 3; }
+    }
+    
+    /* Tarjetas ultra redondeadas */
+    .service-card {
+        break-inside: avoid;
+        margin-bottom: 1.5rem;
+        border: none;
+        border-radius: 1.5rem;
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(5px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.03);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .service-card:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 20px 30px rgba(139, 69, 19, 0.1);
+    }
+    .tutor-avatar {
+        width: 50px;
+        height: 50px;
+        background: #fff;
+        color: #d97706;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 1.5rem;
+        border-radius: 40%;
+        box-shadow: 0 4px 10px rgba(217, 119, 6, 0.15);
+    }
+</style>
+
+<!-- Título Principal (Glassmorphism) -->
+<div class="hero-glass">
+    <div class="badge-hero">
+        <i class="fa-solid fa-sparkles me-1"></i> Tu match académico
+    </div>
+    <h1 class="title-playful mb-3">Explora y Conecta</h1>
+    <p class="text-secondary fs-5 mb-0" style="max-width: 550px; margin: 0 auto; line-height: 1.6;">
+        Encuentra el apoyo perfecto para superar esa materia difícil. Busca, filtra y agenda en un par de clics.
+    </p>
+</div>
+
+<!-- Panel de Filtros -->
+<div class="filter-panel p-4 mb-5">
+    <form method="GET" action="{{ url_for('servicios.buscar') }}" class="row g-3 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label text-muted small fw-bold text-uppercase ms-2">Materia</label>
+            <select name="id_materia" class="form-select border-0 bg-white rounded-pill py-2 shadow-sm">
+                <option value="">Todas las materias</option>
+                {% for materia in materias %}
+                    <option value="{{ materia.id_materia }}"
+                        {% if filtros.id_materia == materia.id_materia %}selected{% endif %}>
+                        {{ materia.nombre }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label text-muted small fw-bold text-uppercase ms-2">Modalidad</label>
+            <select name="modalidad" class="form-select border-0 bg-white rounded-pill py-2 shadow-sm">
+                <option value="">Cualquiera</option>
+                {% for m in ["Virtual", "Presencial", "Híbrido"] %}
+                    <option value="{{ m }}" {% if filtros.modalidad == m %}selected{% endif %}>{{ m }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label text-muted small fw-bold text-uppercase ms-2">Precio máximo</label>
+            <div class="input-group shadow-sm rounded-pill bg-white overflow-hidden">
+                <span class="input-group-text border-0 bg-transparent ps-3"><i class="fa-solid fa-coins text-warning"></i></span>
+                <input type="number" name="precio_max" class="form-control border-0 bg-transparent py-2"
+                       value="{{ filtros.precio_max or '' }}" min="1" placeholder="Ej. 30">
+            </div>
+        </div>
+
+        <div class="col-md-3 d-flex gap-2 pb-1">
+            <button type="submit" class="btn btn-gradient flex-grow-1 rounded-pill fw-semibold py-2">
+                <i class="fa-solid fa-magnifying-glass me-1"></i> Buscar
+            </button>
+            <a href="{{ url_for('servicios.buscar') }}" class="btn btn-white rounded-pill shadow-sm text-secondary py-2 px-3" style="background: white;">
+                <i class="fa-solid fa-eraser"></i>
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Grid de Servicios -->
+<div class="masonry-grid">
+    {% for s in servicios %}
+    <div class="card service-card">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <span class="badge bg-white text-dark rounded-pill px-3 py-2 shadow-sm border">
+                    <i class="fa-solid fa-coins text-warning me-1"></i> {{ s.precio_tokens }}
+                </span>
+                <span class="badge bg-light text-secondary rounded-pill px-3 py-2">
+                    {{ s.modalidad }}
+                </span>
+            </div>
+            
+            <h4 class="card-title fw-bold text-dark mb-1">{{ s.nombre }}</h4>
+            <p class="card-subtitle mb-4 text-primary opacity-75 fw-semibold small">
+                {{ s.materia_nombre }}
+            </p>
+            
+            <div class="d-flex align-items-center mb-4 p-3 rounded-4" style="background: rgba(0,0,0,0.02);">
+                <div class="tutor-avatar me-3">
+                    {{ s.tutor_nombre[:1] | upper }}
+                </div>
+                <div>
+                    <h6 class="mb-0 fw-bold text-dark">{{ s.tutor_nombre }}</h6>
+                    <div class="text-warning small mt-1">
+                        <i class="fa-solid fa-star"></i> 
+                        <span class="fw-bold text-dark ms-1">{{ "%.1f"|format(s.calif_promedio) }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <a href="{{ url_for('servicios.detalle', id_servicio=s.id_servicio) }}"
+               class="btn btn-outline-dark w-100 rounded-pill fw-bold py-2">
+                Ver detalle
+            </a>
+        </div>
+    </div>
+    {% else %}
+    <div class="text-center w-100 py-5 mt-4">
+        <div class="display-1 text-muted mb-3 opacity-25">
+            <i class="fa-solid fa-leaf"></i>
+        </div>
+        <h4 class="text-muted fw-bold">El tablero está vacío</h4>
+        <p class="text-secondary">Intenta relajar los filtros para encontrar más opciones.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- PAGINACIÓN Y CARGAR MÁS -->
+<div class="d-flex justify-content-center mt-5 mb-5 align-items-center gap-3">
+    {% set current_page = page|default(1) %}
+    
+    {% if current_page > 1 %}
+    <!-- Botón Anterior -->
+    <a href="{{ url_for('servicios.buscar', page=current_page-1, id_materia=filtros.id_materia, modalidad=filtros.modalidad, precio_max=filtros.precio_max) }}" 
+       class="btn bg-white border rounded-pill px-4 py-2 shadow-sm text-dark fw-semibold">
+        <i class="fa-solid fa-arrow-left me-2"></i> Anterior
+    </a>
+    {% endif %}
+
+    <!-- Indicador de página -->
+    <span class="badge bg-white text-secondary border rounded-pill px-3 py-2 shadow-sm">
+        Página {{ current_page }}
+    </span>
+
+    {% if servicios|length == 50 %}
+    <!-- Botón Siguiente (Cargar Más) -->
+    <a href="{{ url_for('servicios.buscar', page=current_page+1, id_materia=filtros.id_materia, modalidad=filtros.modalidad, precio_max=filtros.precio_max) }}" 
+       class="btn btn-gradient rounded-pill px-4 py-2 shadow-sm fw-semibold">
+        Siguiente <i class="fa-solid fa-arrow-right ms-2"></i>
+    </a>
+    {% endif %}
+</div>
+
+{% endblock %}

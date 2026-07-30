@@ -7,12 +7,12 @@ from backend.db.connection import fetch_one, fetch_all, execute, call_proc
 
 def crear_usuario(conn, nombre, email, password, area, rol='estudiante'):
     """Inserta un usuario base (sin estudiante/tutor aun)."""
-    execute(conn, """
+    cursor = execute(conn, """
         INSERT INTO usuario (nombre, email, password, area, rol, saldo_tokens, fecha_creacion)
         VALUES (%s, %s, %s, %s, %s, 0, CURRENT_DATE)
     """, (nombre, email, password, area, rol))
     conn.commit()
-    return conn.insert_id()
+    return cursor.lastrowid  
 
 
 def registrar_usuario_completo(conn, nombre, email, password, area, semestre):
@@ -146,8 +146,26 @@ def obtener_materias_tutor(conn, id_tutor):
     """, (id_tutor,))
 
 
-def obtener_desempeno_tutores(conn):
-    return fetch_all(conn, "SELECT * FROM vw_desempeno_tutores")
+def obtener_desempeno_tutores(conn, limit=50, offset=0):
+    query = """
+        SELECT * 
+        FROM vw_desempeno_tutores
+        LIMIT %s OFFSET %s
+    """
+    return fetch_all(conn, query, (limit, offset))
+
+def obtener_perfil_tutor_completo(conn, id_tutor):
+    """Usa vw_perfil_tutor: una fila por cada materia que domina el tutor.
+    Lista vacía = el usuario todavía no se ha postulado como tutor."""
+    return fetch_all(conn, "SELECT * FROM vw_perfil_tutor WHERE id_tutor = %s", (id_tutor,))
+
+def agregar_materia_tutor(conn, id_tutor, id_materia, nota):
+    """Agrega una materia aprobada adicional a un tutor ya existente."""
+    execute(conn, """
+        INSERT INTO materia_aprobada_tutor (id_tutor, id_materia, nota)
+        VALUES (%s, %s, %s)
+    """, (id_tutor, id_materia, nota))
+    conn.commit()
 
 
 # =====================================================================
@@ -181,15 +199,15 @@ def obtener_prerrequisito(conn, id_materia):
 # =====================================================================
 
 def crear_servicio(conn, id_tutor, id_materia, nombre, precio_tokens, modalidad, descripcion):
-    execute(conn, """
+    cursor = execute(conn, """
         INSERT INTO servicio (id_tutor, id_materia, nombre, precio_tokens, modalidad, descripcion)
         VALUES (%s, %s, %s, %s, %s, %s)
     """, (id_tutor, id_materia, nombre, precio_tokens, modalidad, descripcion))
     conn.commit()
-    return conn.insert_id()
+    return cursor.lastrowid  
 
 
-def obtener_servicios(conn, id_materia=None, modalidad=None, precio_max=None):
+def obtener_servicios(conn, id_materia=None, modalidad=None, precio_max=None, limit=50, offset=0):
     query = """
         SELECT s.*, u.nombre AS tutor_nombre, m.nombre AS materia_nombre,
                t.calif_promedio
@@ -200,6 +218,7 @@ def obtener_servicios(conn, id_materia=None, modalidad=None, precio_max=None):
         WHERE 1=1
     """
     params = []
+    
     if id_materia:
         query += " AND s.id_materia = %s"
         params.append(id_materia)
@@ -209,7 +228,13 @@ def obtener_servicios(conn, id_materia=None, modalidad=None, precio_max=None):
     if precio_max:
         query += " AND s.precio_tokens <= %s"
         params.append(precio_max)
+        
     query += " ORDER BY t.calif_promedio DESC"
+    
+    # Se agrega la lógica de paginación
+    query += " LIMIT %s OFFSET %s"
+    params.extend([limit, offset])
+    
     return fetch_all(conn, query, params)
 
 
@@ -259,8 +284,11 @@ def obtener_reuniones_estudiante(conn, id_estudiante, solo_pendientes=False):
         WHERE r.id_estudiante = %s
     """
     if solo_pendientes:
-        query += " AND r.estado = 'Agendada'"
-    query += " ORDER BY r.fecha DESC, r.hora_inicio DESC"
+        # ya no basta con el estado, también debe ser en el futuro
+        query += " AND r.estado = 'Agendada' AND TIMESTAMP(r.fecha, r.hora_inicio) > NOW()"
+        query += " ORDER BY r.fecha ASC, r.hora_inicio ASC"  # próximas primero, no las más recientes
+    else:
+        query += " ORDER BY r.fecha DESC, r.hora_inicio DESC"
     return fetch_all(conn, query, (id_estudiante,))
 
 
@@ -275,8 +303,10 @@ def obtener_reuniones_tutor(conn, id_tutor, solo_pendientes=False):
         WHERE r.id_tutor = %s
     """
     if solo_pendientes:
-        query += " AND r.estado = 'Agendada'"
-    query += " ORDER BY r.fecha DESC, r.hora_inicio DESC"
+        query += " AND r.estado = 'Agendada' AND TIMESTAMP(r.fecha, r.hora_inicio) > NOW()"
+        query += " ORDER BY r.fecha ASC, r.hora_inicio ASC"
+    else:
+        query += " ORDER BY r.fecha DESC, r.hora_inicio DESC"
     return fetch_all(conn, query, (id_tutor,))
 
 
@@ -311,6 +341,15 @@ def finalizar_reunion(conn, id_reunion):
         (id_reunion,))
     conn.commit()
 
+def obtener_ultima_reunion_id(conn, id_estudiante):
+    row = fetch_one(conn, "SELECT MAX(id_reunion) AS id FROM reunion WHERE id_estudiante = %s", (id_estudiante,))
+    return row["id"] if row else None
+
+
+def actualizar_tema_reunion(conn, id_reunion, tema):
+    execute(conn, "UPDATE reunion SET tema = %s WHERE id_reunion = %s", (tema, id_reunion))
+    conn.commit()
+
 
 # =====================================================================
 # RESENIAS
@@ -318,12 +357,12 @@ def finalizar_reunion(conn, id_reunion):
 
 def crear_resena(conn, id_estudiante, id_tutor, id_materia, calificacion, texto=None):
     """Crea una resena. El trigger actualiza calif_promedio del tutor."""
-    execute(conn, """
+    cursor = execute(conn, """
         INSERT INTO resena (id_estudiante, id_tutor, id_materia, calificacion, texto)
         VALUES (%s, %s, %s, %s, %s)
     """, (id_estudiante, id_tutor, id_materia, calificacion, texto))
     conn.commit()
-    return conn.insert_id()
+    return cursor.lastrowid  
 
 
 def obtener_resenas_tutor(conn, id_tutor):
@@ -356,6 +395,15 @@ def crear_baneo(conn, id_usuario, motivo, fecha_inicio, fecha_fin):
     """, (id_usuario, motivo, fecha_inicio, fecha_fin))
     conn.commit()
 
+
+def buscar_usuarios_admin(conn, termino, limit=10):
+    query = """
+        SELECT id_usuario, nombre, email, rol 
+        FROM usuario 
+        WHERE nombre LIKE %s OR email LIKE %s
+        LIMIT %s
+    """
+    return fetch_all(conn, query, (f"%{termino}%", f"%{termino}%", limit))
 
 # =====================================================================
 # MOVIMIENTOS DE TOKENS

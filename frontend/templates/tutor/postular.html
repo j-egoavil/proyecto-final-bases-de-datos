@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block title %}Postularme como tutor{% endblock %}
+
+{% block content %}
+<style>
+    /* Fondo con gradiente cálido */
+    body {
+        background: linear-gradient(135deg, #fcfaf8 0%, #ede3da 100%) !important;
+        min-height: 100vh;
+    }
+
+    /* Contenedor principal de la tarjeta */
+    .apply-wrapper {
+        max-width: 850px;
+        margin: 2rem auto;
+    }
+
+    /* Tarjeta estilo Vidrio Esmerilado (Glassmorphism) */
+    .apply-card {
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        border-radius: 2rem;
+        box-shadow: 0 15px 35px rgba(139, 69, 19, 0.08);
+        padding: 3rem;
+    }
+
+    /* Título principal con gradiente */
+    .apply-title {
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        background: linear-gradient(135deg, #5c2c0b, #d97706);
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Inputs y selects personalizados */
+    .custom-input-group {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+        overflow: hidden;
+        border: 1px solid rgba(139, 69, 19, 0.08);
+    }
+
+    /* Fila de materia dinámica */
+    .fila-materia {
+        background: rgba(255, 255, 255, 0.4);
+        border: 1px solid rgba(139, 69, 19, 0.08);
+        border-radius: 1.25rem;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+    .fila-materia:hover {
+        background: rgba(255, 255, 255, 0.7);
+        box-shadow: 0 8px 20px rgba(139, 69, 19, 0.04);
+    }
+
+    /* Botón principal */
+    .btn-gradient {
+        background: linear-gradient(135deg, #d97706, #b45309);
+        color: white;
+        border: none;
+        transition: all 0.3s ease;
+    }
+    .btn-gradient:hover {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px -5px rgba(217, 119, 6, 0.4);
+    }
+</style>
+
+<div class="apply-wrapper">
+    
+    <div class="apply-card">
+        
+        <!-- Encabezado -->
+        <div class="mb-4">
+            <span class="badge bg-white text-warning border px-3 py-2 rounded-pill shadow-sm mb-3">
+                <i class="fa-solid fa-chalkboard-user me-1"></i> Red de Tutores
+            </span>
+            <h2 class="apply-title display-6 mb-1">Postularme como Tutor</h2>
+            <p class="text-secondary small mb-0">Comparte tus conocimientos y ayuda a otros estudiantes de la comunidad.</p>
+        </div>
+
+        <hr class="text-muted opacity-15 my-4">
+
+        <!-- Formulario -->
+        <form method="POST" action="{{ url_for('tutor.postular') }}">
+            
+            <!-- Descripción -->
+            <div class="mb-4">
+                <label class="form-label text-muted small fw-bold text-uppercase ms-2">Descripción (preséntate a tus futuros estudiantes)</label>
+                <div class="custom-input-group px-3 py-2">
+                    <textarea name="descripcion" class="form-control border-0 bg-transparent py-2 shadow-none" rows="3" placeholder="Cuéntanos sobre tu experiencia, metodología o por qué te apasiona enseñar..." required></textarea>
+                </div>
+            </div>
+
+            <!-- Título de sección de materias -->
+            <div class="d-flex justify-content-between align-items-center mb-3 px-1">
+                <h5 class="fw-bold text-dark mb-0 fs-6">
+                    <i class="fa-solid fa-book-bookmark text-warning me-2"></i> Materias aprobadas <span class="text-muted fw-normal small">(nota ≥ 4.0)</span>
+                </h5>
+            </div>
+
+            <!-- Contenedor dinámico de materias -->
+            <div id="materias-container">
+                <div class="row g-3 align-items-center fila-materia">
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small fw-bold text-uppercase ms-1">Materia</label>
+                        <select name="id_materia[]" class="form-select border rounded-pill py-2 bg-white shadow-sm" required>
+                            <option value="">Selecciona materia...</option>
+                            {% for materia in materias %}
+                                <option value="{{ materia.id_materia }}">{{ materia.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-muted small fw-bold text-uppercase ms-1">Nota obtenida</label>
+                        <input type="number" name="nota[]" class="form-control border rounded-pill py-2 bg-white shadow-sm text-center" min="4.0" max="5.0" step="0.1" placeholder="Ej. 4.5" required>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="button" class="btn btn-outline-danger btn-quitar-materia w-100 rounded-pill py-2">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botón agregar otra materia -->
+            <button type="button" id="btn-agregar-materia" class="btn btn-outline-secondary btn-sm rounded-pill px-4 py-2 mb-4 fw-semibold shadow-sm bg-white">
+                <i class="fa-solid fa-plus me-1 text-warning"></i> Agregar otra materia
+            </button>
+
+            <!-- Botón Enviar Postulación -->
+            <div class="mt-4">
+                <button type="submit" class="btn btn-gradient w-100 rounded-pill py-3 fw-bold fs-6 shadow-sm">
+                    <i class="fa-solid fa-paper-plane me-2"></i> Enviar postulación
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+</div>
+
+{% endblock %}

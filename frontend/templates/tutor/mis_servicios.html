@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% block title %}Mis servicios{% endblock %}
+
+{% block content %}
+<style>
+    /* Fondo con gradiente cálido */
+    body {
+        background: linear-gradient(135deg, #fcfaf8 0%, #ede3da 100%) !important;
+        min-height: 100vh;
+    }
+
+    /* Contenedor principal */
+    .services-wrapper {
+        max-width: 1100px;
+        margin: 2rem auto;
+    }
+
+    /* Banner superior estilo Glass */
+    .services-hero {
+        background: rgba(255, 255, 255, 0.6);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        border-radius: 2rem;
+        padding: 2.5rem 3rem;
+        box-shadow: 0 10px 30px rgba(139, 69, 19, 0.05);
+        margin-bottom: 2rem;
+    }
+
+    .hero-title {
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        background: linear-gradient(135deg, #5c2c0b, #d97706);
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Tarjetas contenedor estilo Glass */
+    .glass-card {
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        border-radius: 2rem;
+        box-shadow: 0 15px 35px rgba(139, 69, 19, 0.08);
+        padding: 2.5rem;
+        margin-bottom: 2.5rem;
+    }
+
+    /* Contenedor de la tabla */
+    .table-container {
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        border-radius: 2rem;
+        box-shadow: 0 15px 35px rgba(139, 69, 19, 0.08);
+        overflow: hidden;
+        padding: 2rem;
+        margin-bottom: 3rem;
+    }
+
+    /* Estilo de la tabla personalizada */
+    .custom-table {
+        margin-bottom: 0;
+        vertical-align: middle;
+    }
+    .custom-table th {
+        background: transparent !important;
+        color: #5c2c0b;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid rgba(139, 69, 19, 0.1) !important;
+        padding: 1rem;
+    }
+    .custom-table td {
+        background: transparent !important;
+        padding: 1rem;
+        color: #2c1810;
+        font-weight: 500;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+    }
+
+    /* Botón principal */
+    .btn-gradient {
+        background: linear-gradient(135deg, #d97706, #b45309);
+        color: white;
+        border: none;
+        transition: all 0.3s ease;
+    }
+    .btn-gradient:hover {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px -5px rgba(217, 119, 6, 0.4);
+    }
+</style>
+
+<div class="services-wrapper">
+    
+    <!-- Banner Principal del Tutor -->
+    <div class="services-hero d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+        <div>
+            <span class="badge bg-white text-warning border px-3 py-2 rounded-pill shadow-sm mb-2">
+                <i class="fa-solid fa-chalkboard-user me-1"></i> Panel de Tutor
+            </span>
+            <h1 class="hero-title display-6 mb-1">Mis Servicios</h1>
+            {% if perfil and perfil|length > 0 %}
+            <p class="text-secondary mb-0">
+                <span class="fw-bold text-dark">{{ perfil[0].nombre }}</span> &bull; 
+                {{ perfil[0].area }} &bull; 
+                <span class="text-warning fw-bold"><i class="fa-solid fa-star"></i> {{ "%.1f"|format(perfil[0].calif_promedio) }} / 5.0</span>
+            </p>
+            {% endif %}
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{{ url_for('tutor.agregar_materia') }}" class="btn btn-outline-dark rounded-pill px-4 py-2 fw-semibold shadow-sm bg-gray">
+                <i class="fa-solid fa-plus me-1 text-warning"></i> Agregar materia
+            </a>
+            <a href="{{ url_for('tutor.crear_nuevo_servicio') }}" class="btn btn-gradient rounded-pill px-4 py-2 fw-semibold shadow-sm">
+                <i class="fa-solid fa-circle-plus me-1"></i> Crear servicio
+            </a>
+        </div>
+    </div>
+
+    <!-- Tarjeta de Materias Aprobadas como Tutor -->
+    <div class="glass-card mb-4">
+        <h5 class="fw-bold text-dark mb-3">
+            <i class="fa-solid fa-book-bookmark text-warning me-2"></i> Materias aprobadas como tutor
+        </h5>
+        
+        <div class="d-flex flex-wrap gap-2">
+            {% if perfil and perfil|length > 0 and perfil[0].materia %}
+                {% for fila in perfil %}
+                    <span class="badge bg-white text-dark border px-3 py-2 rounded-pill shadow-sm fs-6 fw-normal">
+                        <i class="fa-solid fa-check text-success me-1"></i> {{ fila.materia }}
+                    </span>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted small mb-0">No tienes materias registradas todavía.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Sección de Servicios Creados -->
+    <div class="mb-3 px-2">
+        <h4 class="fw-bold text-dark mb-0"><i class="fa-solid fa-list-check text-primary me-2"></i> Servicios de tutoría activos</h4>
+    </div>
+
+    <div class="table-container">
+        <div class="table-responsive">
+            <table class="table custom-table">
+                <thead>
+                    <tr>
+                        <th>Nombre del servicio</th>
+                        <th>Materia</th>
+                        <th>Modalidad</th>
+                        <th>Precio</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in servicios %}
+                    <tr>
+                        <td class="fw-bold text-dark">{{ s.nombre }}</td>
+                        <td class="text-primary fw-semibold">{{ s.materia_nombre }}</td>
+                        <td>
+                            <span class="badge bg-light text-secondary border px-2 py-1">{{ s.modalidad }}</span>
+                        </td>
+                        <td>
+                            <span class="text-warning fw-bold"><i class="fa-solid fa-coins me-1"></i> {{ s.precio_tokens }} tokens</span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="text-center py-5 text-muted">
+                            <i class="fa-solid fa-mug-hot fa-2x mb-2 opacity-50 d-block"></i>
+                            Aún no tienes servicios creados. ¡Anímate a crear uno nuevo!
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

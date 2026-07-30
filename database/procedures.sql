@@ -1,4 +1,4 @@
-pgit log -1 --pretty=fullKLUSE u_linker;
+LUSE u_linker;
 
 -- -------------------------------------------------------------------
 -- PROCEDIMIENTOS ALMACENADOS
@@ -101,7 +101,125 @@ BEGIN
 END$$
 
 DELIMITER ;
+-- Procedimiento 3
 
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS sp_tutorias_pendientes $$
+
+CREATE PROCEDURE sp_tutorias_pendientes(
+    IN p_id_usuario INT
+)
+BEGIN
+
+    SELECT r.id_reunion,ue.nombre AS estudiante,
+        ut.nombre AS tutor, s.nombre AS servicio,
+        m.nombre AS materia,r.fecha,
+        r.hora_inicio, r.hora_fin, r.tema, r.estado,r.tokens_cobrados
+	FROM reunion r
+	INNER JOIN usuario ue
+        ON r.id_estudiante = ue.id_usuario
+    INNER JOIN usuario ut
+        ON r.id_tutor = ut.id_usuario
+    INNER JOIN servicio s
+        ON r.id_servicio = s.id_servicio
+    INNER JOIN materia m
+        ON s.id_materia = m.id_materia
+    WHERE
+        (r.id_estudiante = p_id_usuario
+        OR
+        r.id_tutor = p_id_usuario)
+        AND r.estado='Agendada'
+    ORDER BY
+        r.fecha ASC,
+        r.hora_inicio ASC;
+END $$
+
+DELIMITER ;
+-- Procedimiento 4 
+
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS sp_tutores_disponibles $$
+
+CREATE PROCEDURE sp_tutores_disponibles(
+    IN p_id_materia INT
+)
+BEGIN
+
+    SELECT t.id_tutor, u.nombre, u.email,
+        u.area,
+        mat.nota,
+        t.calif_promedio
+    FROM materia_aprobada_tutor mat
+    INNER JOIN tutor t
+        ON mat.id_tutor = t.id_tutor
+    INNER JOIN usuario u
+        ON t.id_tutor = u.id_usuario
+    WHERE mat.id_materia = p_id_materia
+      AND mat.nota >= 4.0
+      AND fn_es_usuario_baneado(u.id_usuario, CURDATE()) = FALSE
+    ORDER BY
+        t.calif_promedio DESC,
+        mat.nota DESC;
+
+END $$
+
+DELIMITER ;
+
+-- Procedimiento 5
+
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS sp_ranking_tutores $$
+
+CREATE PROCEDURE sp_ranking_tutores()
+BEGIN
+
+    SELECT t.id_tutor,u.nombre,u.area,
+        t.calif_promedio,
+        COUNT(r.id_reunion) AS total_finalizadas
+    FROM tutor t
+    INNER JOIN usuario u
+        ON t.id_tutor = u.id_usuario
+    LEFT JOIN reunion r
+        ON t.id_tutor = r.id_tutor
+        AND r.estado = 'Finalizada'
+    GROUP BY t.id_tutor, u.nombre, u.area,t.calif_promedio
+    ORDER BY
+        t.calif_promedio DESC,
+        total_finalizadas DESC;
+
+END $$
+
+DELIMITER ;
+-- Procedimiento 6: sp_materias_con_prerrequisitos
+
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS sp_materias_con_prerrequisitos $$
+CREATE PROCEDURE sp_materias_con_prerrequisitos()
+BEGIN
+	WITH RECURSIVE cadena_prerrequisitos AS (
+
+        SELECT id_materia,nombre,id_prerequisito,1 AS nivel
+        FROM materia
+        WHERE id_prerequisito IS NULL
+		UNION ALL
+        SELECT m.id_materia,m.nombre, m.id_prerequisito, cp.nivel + 1
+		FROM materia m
+        INNER JOIN cadena_prerrequisitos cp
+            ON m.id_prerequisito = cp.id_materia
+
+    )
+
+    SELECT *
+    FROM cadena_prerrequisitos
+    ORDER BY nivel, nombre;
+
+END $$
+
+DELIMITER ;
 
 -- -------------------------------------------------------------------
 -- BLOQUES DE COMPROBACION

@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% block title %}Mi perfil{% endblock %}
+
+{% block content %}
+<style>
+    /* Fondo con gradiente cálido */
+    body {
+        background: linear-gradient(135deg, #fcfaf8 0%, #ede3da 100%) !important;
+        min-height: 100vh;
+    }
+
+    /* Contenedor principal de la tarjeta de perfil */
+    .profile-wrapper {
+        max-width: 900px;
+        margin: 2rem auto;
+    }
+
+    /* Tarjeta estilo Vidrio Esmerilado (Glassmorphism) */
+    .profile-card {
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        border-radius: 2rem;
+        box-shadow: 0 15px 35px rgba(139, 69, 19, 0.08);
+        padding: 3rem;
+        margin-bottom: 2.5rem;
+    }
+
+    /* Título con gradiente */
+    .profile-title {
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        background: linear-gradient(135deg, #5c2c0b, #d97706);
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Inputs y selects personalizados */
+    .custom-input-group {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+        overflow: hidden;
+        border: 1px solid rgba(139, 69, 19, 0.08);
+    }
+
+    /* Contenedor de la tabla */
+    .table-container {
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        border-radius: 2rem;
+        box-shadow: 0 15px 35px rgba(139, 69, 19, 0.08);
+        overflow: hidden;
+        padding: 2rem;
+        margin-bottom: 3rem;
+    }
+
+    /* Estilo de la tabla personalizada */
+    .custom-table {
+        margin-bottom: 0;
+        vertical-align: middle;
+    }
+    .custom-table th {
+        background: transparent !important;
+        color: #5c2c0b;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid rgba(139, 69, 19, 0.1) !important;
+        padding: 1rem;
+    }
+    .custom-table td {
+        background: transparent !important;
+        padding: 1rem;
+        color: #2c1810;
+        font-weight: 500;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+    }
+
+    /* Botón principal */
+    .btn-gradient {
+        background: linear-gradient(135deg, #d97706, #b45309);
+        color: white;
+        border: none;
+        transition: all 0.3s ease;
+    }
+    .btn-gradient:hover {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px -5px rgba(217, 119, 6, 0.4);
+    }
+</style>
+
+<div class="profile-wrapper">
+    
+    <!-- Tarjeta de Edición de Perfil -->
+    <div class="profile-card">
+        <div class="mb-4">
+            <span class="badge bg-white text-warning border px-3 py-2 rounded-pill shadow-sm mb-3">
+                <i class="fa-solid fa-user-gear me-1"></i> Configuración
+            </span>
+            <h2 class="profile-title display-6 mb-1">Mi Perfil</h2>
+            <p class="text-secondary small mb-0">Actualiza tu información personal y académica.</p>
+        </div>
+
+        <hr class="text-muted opacity-15 my-4">
+
+        <form method="POST" action="{{ url_for('usuario.perfil') }}" class="row g-4">
+            
+            <!-- Nombre -->
+            <div class="col-md-6">
+                <label class="form-label text-muted small fw-bold text-uppercase ms-2">Nombre completo</label>
+                <div class="custom-input-group d-flex align-items-center px-3 py-2">
+                    <i class="fa-solid fa-id-card text-warning fs-5 me-3"></i>
+                    <input type="text" name="nombre" class="form-control border-0 bg-transparent py-2 shadow-none" value="{{ usuario.nombre }}" required>
+                </div>
+            </div>
+
+            <!-- Área -->
+            <div class="col-md-6">
+                <label class="form-label text-muted small fw-bold text-uppercase ms-2">Área de estudio</label>
+                <div class="custom-input-group d-flex align-items-center px-3 py-2">
+                    <i class="fa-solid fa-graduation-cap text-warning fs-5 me-3"></i>
+                    <select name="area" class="form-select border-0 bg-transparent py-2 shadow-none">
+                        {% for a in ["Ing. Sistemas", "Ing. Industrial", "Ing. Civil", "Ing. Mecánica", "Ing. Mecatrónica", "Ing. Electrónica"] %}
+                            <option value="{{ a }}" {% if usuario.area == a %}selected{% endif %}>{{ a }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Botón Guardar -->
+            <div class="col-12 mt-4">
+                <button type="submit" class="btn btn-gradient w-100 rounded-pill py-3 fw-bold fs-6 shadow-sm">
+                    <i class="fa-solid fa-floppy-disk me-2"></i> Guardar cambios
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Sección de Historial de Tokens -->
+    <div class="mb-3 px-2">
+        <h4 class="fw-bold text-dark mb-1">Historial de movimientos</h4>
+        <p class="text-secondary small">Registro detallado de tus entradas y salidas de tokens.</p>
+    </div>
+
+    <div class="table-container">
+        <div class="table-responsive">
+            <table class="table custom-table">
+                <thead>
+                    <tr>
+                        <th><i class="fa-solid fa-calendar-days me-1"></i> Fecha y Hora</th>
+                        <th><i class="fa-solid fa-coins me-1"></i> Transacción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in historial %}
+                    <tr>
+                        <td class="fw-semibold text-muted">{{ m.fecha }}</td>
+                        <td>
+                            <span class="badge px-3 py-2 rounded-pill {{ 'bg-success bg-opacity-10 text-success border border-success border-opacity-25' if m.cantidad > 0 else 'bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25' }}">
+                                <i class="fa-solid {{ 'fa-arrow-trend-up' if m.cantidad > 0 else 'fa-arrow-trend-down' }} me-1"></i>
+                                {{ "+" if m.cantidad > 0 else "" }}{{ m.cantidad }} tokens
+                            </span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="2" class="text-center py-5 text-muted">
+                            <i class="fa-solid fa-folder-open fa-2x mb-2 opacity-50 d-block"></i>
+                            Sin movimientos de tokens registrados todavía.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

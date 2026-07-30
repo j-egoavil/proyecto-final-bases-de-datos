@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+{% block title %}Gestión de baneos{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        background: linear-gradient(135deg, #fcfaf8 0%, #ede3da 100%) !important;
+        min-height: 100vh;
+    }
+    .bans-wrapper { max-width: 1100px; margin: 2rem auto; }
+    .bans-hero {
+        background: rgba(255, 255, 255, 0.6);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        border-radius: 2rem;
+        padding: 2.5rem 3rem;
+        box-shadow: 0 10px 30px rgba(139, 69, 19, 0.05);
+        margin-bottom: 2.5rem;
+    }
+    .hero-title {
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        background: linear-gradient(135deg, #5c2c0b, #d97706);
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .glass-card {
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        border-radius: 2rem;
+        box-shadow: 0 15px 35px rgba(139, 69, 19, 0.08);
+        padding: 2.5rem;
+        margin-bottom: 3rem;
+    }
+    .table-container {
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        border-radius: 2rem;
+        box-shadow: 0 15px 35px rgba(139, 69, 19, 0.08);
+        overflow: hidden;
+        padding: 2rem;
+        margin-bottom: 3rem;
+    }
+    .custom-input-group {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+        overflow: hidden;
+        border: 1px solid rgba(139, 69, 19, 0.08);
+    }
+    .custom-table th {
+        background: transparent !important;
+        color: #5c2c0b;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        border-bottom: 2px solid rgba(139, 69, 19, 0.1) !important;
+        padding: 1rem;
+    }
+    .custom-table td {
+        background: transparent !important;
+        padding: 1rem;
+        color: #2c1810;
+        font-weight: 500;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+    }
+    .btn-danger-gradient {
+        background: linear-gradient(135deg, #dc3545, #b02a37);
+        color: white;
+        border: none;
+        transition: all 0.3s ease;
+    }
+    .btn-danger-gradient:hover {
+        background: linear-gradient(135deg, #e4606d, #dc3545);
+        color: white;
+        transform: translateY(-2px);
+    }
+</style>
+
+<div class="bans-wrapper">
+    
+    <div class="bans-hero d-flex justify-content-between align-items-center">
+        <div>
+            <span class="badge bg-white text-danger border px-3 py-2 rounded-pill shadow-sm mb-2">
+                <i class="fa-solid fa-ban me-1"></i> Seguridad y Sanciones
+            </span>
+            <h1 class="hero-title display-6 mb-1">Gestión de Baneos</h1>
+            <p class="text-secondary mb-0">Busca al usuario por nombre o correo para aplicarle restricciones.</p>
+        </div>
+    </div>
+
+    <!-- PASO 1: BUSCADOR DE USUARIOS (Evita congelamientos) -->
+    <div class="mb-3 px-2">
+        <h4 class="fw-bold text-dark mb-0"><i class="fa-solid fa-magnifying-glass text-danger me-2"></i> 1. Buscar usuario a sancionar</h4>
+    </div>
+
+    <div class="glass-card mb-4">
+        <form method="GET" action="{{ url_for('admin.baneos') }}" class="row g-3 align-items-center">
+            <div class="col-md-9">
+                <div class="custom-input-group d-flex align-items-center px-3 py-2">
+                    <i class="fa-solid fa-user text-danger fs-5 me-3"></i>
+                    <input type="text" name="q" class="form-control border-0 bg-transparent py-2 shadow-none" value="{{ busqueda }}" placeholder="Escribe el nombre o correo del usuario..." required>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-dark w-100 rounded-pill py-3 fw-bold shadow-sm">
+                    <i class="fa-solid fa-search me-2"></i> Buscar
+                </button>
+            </div>
+        </form>
+
+        <!-- Resultados de la búsqueda -->
+        {% if busqueda %}
+        <div class="mt-4">
+            <h6 class="fw-bold text-muted small text-uppercase mb-3">Resultados para "{{ busqueda }}":</h6>
+            <div class="table-responsive bg-white rounded-4 p-3 border">
+                <table class="table table-sm custom-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Rol</th>
+                            <th class="text-end">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in usuarios %}
+                        <tr>
+                            <td class="fw-bold">{{ u.nombre }}</td>
+                            <td class="text-secondary">{{ u.email }}</td>
+                            <td><span class="badge bg-light text-dark border">{{ u.rol }}</span></td>
+                            <td class="text-end">
+                                <!-- Botón que despliega el formulario de baneo para este usuario específico -->
+                                <button class="btn btn-sm btn-danger rounded-pill px-3 fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#formBaneo{{ u.id_usuario }}">
+                                    Banear
+                                </button>
+                            </td>
+                        </tr>
+                        <!-- Formulario desplegable individual para cada usuario encontrado -->
+                        <tr>
+                            <td colspan="4" class="p-0 border-0">
+                                <div class="collapse p-3 bg-light rounded-4 my-2" id="formBaneo{{ u.id_usuario }}">
+                                    <form method="POST" action="{{ url_for('admin.crear_baneo_route') }}" class="row g-3">
+                                        <input type="hidden" name="id_usuario" value="{{ u.id_usuario }}">
+                                        <div class="col-md-12">
+                                            <p class="fw-bold text-dark mb-2">Aplicando sanción a: {{ u.nombre }} ({{ u.email }})</p>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <label class="form-label small fw-bold">Motivo</label>
+                                            <input type="text" name="motivo" class="form-control form-control-sm" placeholder="Razón del baneo" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold">Desde</label>
+                                            <input type="date" name="fecha_inicio" class="form-control form-control-sm" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold">Hasta</label>
+                                            <input type="date" name="fecha_fin" class="form-control form-control-sm" required>
+                                        </div>
+                                        <div class="col-12 text-end">
+                                            <button type="submit" class="btn btn-danger-gradient btn-sm rounded-pill px-4 fw-bold">
+                                                Confirmar baneo
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center py-3 text-muted">No se encontró ningún usuario con ese nombre o correo.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Sección: Baneos activos -->
+    <div class="mb-3 px-2">
+        <h4 class="fw-bold text-dark mb-0"><i class="fa-solid fa-list-check text-warning me-2"></i> Baneos activos en el sistema</h4>
+    </div>
+
+    <div class="table-container">
+        <div class="table-responsive">
+            <table class="table custom-table">
+                <thead>
+                    <tr>
+                        <th>Usuario</th>
+                        <th>Email</th>
+                        <th>Motivo</th>
+                        <th>Hasta</th>
+                        <th class="text-center">Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for b in baneos %}
+                    <tr>
+                        <td class="fw-bold text-dark"><i class="fa-solid fa-user-shield me-1 text-danger"></i> {{ b.nombre }}</td>
+                        <td class="text-secondary">{{ b.email }}</td>
+                        <td>{{ b.motivo }}</td>
+                        <td>
+                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3 py-2 rounded-pill">
+                                {{ b.fecha_fin }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <form method="POST" action="{{ url_for('admin.levantar_baneo', id_usuario=b.id_usuario) }}" class="d-inline">
+                                <button class="btn btn-sm btn-outline-success rounded-pill px-3 fw-semibold">
+                                    <i class="fa-solid fa-check me-1"></i> Levantar
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">
+                            <i class="fa-solid fa-face-smile fa-2x mb-2 opacity-50 d-block"></i>
+                            Sin baneos activos en este momento.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

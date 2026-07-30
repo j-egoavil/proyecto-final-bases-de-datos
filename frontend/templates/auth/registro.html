@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% block title %}Crear cuenta{% endblock %}
+
+{% block content %}
+<style>
+    /* Contenedor central */
+    .auth-wrapper {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 0;
+    }
+
+    /* Tarjeta estilo Vidrio Esmerilado (Glassmorphism) */
+    .auth-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        border-radius: 2rem;
+        box-shadow: 0 15px 35px rgba(139, 69, 19, 0.08);
+        padding: 3rem 2.5rem;
+        width: 100%;
+        max-width: 550px; /* Un poco más ancha que el login por los campos extra */
+    }
+
+    /* Título con gradiente */
+    .auth-title {
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        background: linear-gradient(135deg, #5c2c0b, #d97706);
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Botón principal */
+    .btn-gradient {
+        background: linear-gradient(135deg, #d97706, #b45309);
+        color: white;
+        border: none;
+        transition: all 0.3s ease;
+    }
+    .btn-gradient:hover {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px -5px rgba(217, 119, 6, 0.4);
+    }
+
+    /* Enlaces */
+    .auth-link {
+        color: #d97706;
+        font-weight: 700;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+    .auth-link:hover {
+        color: #b45309;
+        text-decoration: underline;
+    }
+
+    /* Icono superior */
+    .icon-circle {
+        width: 65px;
+        height: 65px;
+        background: #ffffff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        box-shadow: 0 8px 20px rgba(217, 119, 6, 0.15);
+        margin-bottom: 1.5rem;
+    }
+</style>
+
+<div class="auth-wrapper">
+    <div class="auth-card">
+        
+        <!-- Encabezado de la tarjeta -->
+        <div class="text-center mb-4">
+            <div class="icon-circle">
+                <i class="fa-solid fa-user-plus text-warning fs-3"></i>
+            </div>
+            <h2 class="auth-title h3 mb-1">Únete a U-Linker</h2>
+            <p class="text-secondary small">Crea tu cuenta y empieza a conectar</p>
+        </div>
+
+        <!-- Formulario -->
+        <form method="POST" action="{{ url_for('auth.registro') }}">
+            
+            <!-- Campo de Nombre -->
+            <div class="mb-3">
+                <label class="form-label text-muted small fw-bold text-uppercase ms-2">Nombre completo</label>
+                <div class="input-group shadow-sm rounded-pill overflow-hidden bg-white border-0">
+                    <span class="input-group-text border-0 bg-transparent ps-4 pe-2">
+                        <i class="fa-solid fa-id-card text-muted opacity-50"></i>
+                    </span>
+                    <input type="text" name="nombre" class="form-control border-0 bg-transparent py-3 px-2" placeholder="Ej. Juan Pérez" required>
+                </div>
+            </div>
+
+            <!-- Campo de Email -->
+            <div class="mb-3">
+                <label class="form-label text-muted small fw-bold text-uppercase ms-2">Email</label>
+                <div class="input-group shadow-sm rounded-pill overflow-hidden bg-white border-0">
+                    <span class="input-group-text border-0 bg-transparent ps-4 pe-2">
+                        <i class="fa-solid fa-envelope text-muted opacity-50"></i>
+                    </span>
+                    <input type="email" name="email" class="form-control border-0 bg-transparent py-3 px-2" placeholder="tu@correo.unal.edu.co" required>
+                </div>
+            </div>
+            
+            <!-- Campo de Contraseña -->
+            <div class="mb-3">
+                <label class="form-label text-muted small fw-bold text-uppercase ms-2">Contraseña</label>
+                <div class="input-group shadow-sm rounded-pill overflow-hidden bg-white border-0">
+                    <span class="input-group-text border-0 bg-transparent ps-4 pe-2">
+                        <i class="fa-solid fa-lock text-muted opacity-50"></i>
+                    </span>
+                    <input type="password" name="password" class="form-control border-0 bg-transparent py-3 px-2" placeholder="Crea una contraseña segura" required>
+                </div>
+            </div>
+
+            <!-- Fila para Área y Semestre -->
+            <div class="row">
+                <!-- Campo de Área -->
+                <div class="col-md-7 mb-4">
+                    <label class="form-label text-muted small fw-bold text-uppercase ms-2">Área</label>
+                    <div class="input-group shadow-sm rounded-pill overflow-hidden bg-white border-0">
+                        <span class="input-group-text border-0 bg-transparent ps-4 pe-2">
+                            <i class="fa-solid fa-graduation-cap text-muted opacity-50"></i>
+                        </span>
+                        <select name="area" class="form-select border-0 bg-transparent py-3 px-2" required>
+                            <option value="" disabled selected>Selecciona...</option>
+                            <option value="Ing. Sistemas">Ing. Sistemas</option>
+                            <option value="Ing. Industrial">Ing. Industrial</option>
+                            <option value="Ing. Civil">Ing. Civil</option>
+                            <option value="Ing. Mecánica">Ing. Mecánica</option>
+                            <option value="Ing. Mecatrónica">Ing. Mecatrónica</option>
+                            <option value="Ing. Electrónica">Ing. Electrónica</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Campo de Semestre -->
+                <div class="col-md-5 mb-4">
+                    <label class="form-label text-muted small fw-bold text-uppercase ms-2">Semestre</label>
+                    <div class="input-group shadow-sm rounded-pill overflow-hidden bg-white border-0">
+                        <span class="input-group-text border-0 bg-transparent ps-4 pe-2">
+                            <i class="fa-solid fa-hashtag text-muted opacity-50"></i>
+                        </span>
+                        <input type="number" name="semestre" class="form-control border-0 bg-transparent py-3 px-2" min="1" max="12" placeholder="Ej. 4" required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botón de Envío -->
+            <button type="submit" class="btn btn-gradient w-100 rounded-pill py-3 fw-bold fs-6 mb-3">
+                Crear cuenta <i class="fa-solid fa-check ms-1"></i>
+            </button>
+            
+        </form>
+        
+        <!-- Pie de tarjeta (Login) -->
+        <div class="text-center mt-4">
+            <p class="text-secondary small mb-0">
+                ¿Ya tienes una cuenta? <br class="d-md-none">
+                <a href="{{ url_for('auth.login') }}" class="auth-link">Inicia sesión aquí</a>
+            </p>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
