@@ -1,0 +1,295 @@
+﻿\documentclass[11pt,aspectratio=169]{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+
+\usetheme{Madrid}
+\usecolortheme{default}
+
+\lstset{
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\color{blue},
+    commentstyle=\color{gray},
+    stringstyle=\color{red},
+    breaklines=true,
+    showstringspaces=false,
+    frame=single,
+    numbers=none,
+    language=SQL
+}
+
+\title[U-Linker Pitch]{U-Linker: Plataforma de Tutoria P2P \\ con Economia de Tokens}
+\subtitle{Pitch Final --- Proyecto de Bases de Datos}
+\author{P1 · P2 · P3 · P4 · P5 · P6}
+\date{}
+
+\begin{document}
+
+% ======================================================================
+\begin{frame}
+    \titlepage
+\end{frame}
+
+% ======================================================================
+% SECCION 1 --- P1: Problema y reglas de negocio (1.5 min)
+% ======================================================================
+\section{Problema y reglas de negocio}
+
+\begin{frame}{El problema}
+    \textbf{Que es U-Linker?}
+    \begin{itemize}
+        \item Plataforma de tutoria entre pares universitarios
+        \item Economia de tokens: el conocimiento se intercambia
+        \item Sistema automatizado con integridad en la BD
+    \end{itemize}
+    \vspace{0.3cm}
+    \textbf{Datos reales:}
+    \begin{itemize}
+        \item 123 usuarios, 20 tutores, 15 materias, 30 servicios
+        \item 1051 reuniones, 80 resenas, 15 sanciones
+        \item 150+ movimientos de tokens
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Reglas de negocio criticas}
+    \begin{block}{Integridad garantizada desde la base de datos}
+        \begin{enumerate}
+            \item \textbf{RN-01:} Solo nota $\geq 4.0$ habilita ser tutor de una materia \\ {\footnotesize (CHECK + trg\_validar\_materia\_tutor)}
+            \item \textbf{RN-02:} Una resena por estudiante-tutor-materia \\ {\footnotesize (UNIQUE + CHECK 1-5)}
+            \item \textbf{RN-03:} Saldo suficiente de tokens para agendar \\ {\footnotesize (fn\_verificar\_saldo + trg\_control\_saldo)}
+            \item \textbf{RN-04:} Cancelacion $>$24h $\rightarrow$ reembolso automatico \\ {\footnotesize (Trg\_reserva\_cancelada)}
+            \item \textbf{RN-05:} Usuario baneado no agenda ni ofrece servicios \\ {\footnotesize (fn\_es\_usuario\_baneado + 2 triggers)}
+            \item \textbf{RN-06:} Calificacion del tutor se recalcula sola \\ {\footnotesize (Trg\_actualizar\_calificacion\_tutor)}
+        \end{enumerate}
+    \end{block}
+    {\small \textbf{Clave:} Estas reglas viven en la BD, no en el backend ni frontend.}
+\end{frame}
+
+% ======================================================================
+% SECCION 2 --- P2: Decisiones de diseno (2.0 min)
+% ======================================================================
+\section{Decisiones de diseno}
+
+\begin{frame}{Del E-R al relacional: 10 tablas}
+    \textbf{Entidades:} usuario, estudiante, tutor, materia, servicio, reunion, resena, baneos, movimiento\_token, materia\_aprobada\_tutor
+
+    \vspace{0.2cm}
+    \textbf{Relaciones clave:}
+    \begin{itemize}
+        \item \texttt{materia\_aprobada\_tutor} (M:N con atributo \texttt{nota})
+        \item \texttt{reunion}: relacion ternaria estudiante--tutor--servicio
+        \item \texttt{materia}: auto-relacion recursiva de prerrequisitos
+    \end{itemize}
+    \begin{block}{Constraints}
+        15 FOREIGN KEYs · 6 CHECK · 5+ UNIQUE · 7 triggers · 6 stored procedures · 5 vistas
+    \end{block}
+\end{frame}
+
+\begin{frame}{Estrategia de jerarquia: table-per-subtype}
+    \textbf{\texttt{usuario} (padre)} $\rightarrow$ \texttt{estudiante} (1:1), \texttt{tutor} (1:1)
+
+    \vspace{0.2cm}
+    \textbf{Por que esta estrategia?}
+    \begin{itemize}
+        \item Un usuario puede ser estudiante, tutor o \textbf{ambos} (rol = `Ambos')
+        \item Cada subtipo tiene atributos exclusivos (semestre, calif\_promedio)
+        \item Las FK apuntan al subtipo correcto, no al padre generico
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Normalizacion y desnormalizacion}
+    \begin{block}{Esquema en 3FN}
+        No hay dependencias transitivas. Cada atributo depende de la llave completa.
+    \end{block}
+    \begin{block}{Dos desnormalizaciones justificadas}
+        \begin{enumerate}
+            \item \textbf{\texttt{usuario.saldo\_tokens}} --- mantenido por SPs/triggers. Evita recalcular desde \texttt{movimiento\_token} (auditoria).
+            \item \textbf{\texttt{reunion.tokens\_cobrados}} --- snapshot historico del precio. Si el tutor cambia el precio despues, la reunion conserva el valor original.
+        \end{enumerate}
+    \end{block}
+\end{frame}
+
+\begin{frame}{Auto-relacion recursiva en materia}
+    \texttt{materia.id\_prerequisito} $\rightarrow$ FK a \texttt{materia.id\_materia}
+
+    \vspace{0.2cm}
+    \textbf{Cadena de ejemplo:} Calculo Diferencial $\rightarrow$ Calculo Integral $\rightarrow$ Estadistica
+
+    \vspace{0.2cm}
+    Consultada con CTE recursiva en \texttt{sp\_materias\_con\_prerrequisitos}. ON DELETE SET NULL.
+\end{frame}
+
+\begin{frame}{Triggers y SPs: logica en la BD}
+    \begin{columns}
+        \column{0.5\textwidth}
+        \textbf{7 Triggers}
+        \begin{enumerate}
+            \footnotesize
+            \item Trg\_actualizar\_calificacion\_tutor
+            \item Trg\_reserva\_cancelada
+            \item trg\_validar\_materia\_tutor
+            \item trg\_validar\_servicio
+            \item trg\_validar\_baneo\_reunion
+            \item trg\_validar\_baneo\_servicio
+            \item trg\_control\_saldo
+        \end{enumerate}
+        \column{0.5\textwidth}
+        \textbf{6 Stored Procedures}
+        \begin{enumerate}
+            \footnotesize
+            \item pr\_agendar\_tutoria
+            \item pr\_asignar\_datos\_usuario
+            \item sp\_tutorias\_pendientes
+            \item sp\_tutores\_disponibles
+            \item sp\_ranking\_tutores
+            \item sp\_materias\_con\_prerrequisitos
+        \end{enumerate}
+    \end{columns}
+    \vspace{0.2cm}
+    \textbf{Mecanismo @seed\_mode:} variable de sesion que desactiva triggers de validacion durante la carga masiva de datos (seed.sql). Al terminar, los triggers vuelven a estar activos.
+\end{frame}
+
+% ======================================================================
+% SECCION 3 --- P3: Demo consulta 1 (1.0 min)
+% ======================================================================
+\section{Demo 1: JOIN multiple}
+
+\begin{frame}[fragile]{Consulta 1 --- Detalle de reuniones finalizadas}
+    \textbf{Pregunta:} Quienes participaron en las ultimas reuniones?
+
+    \begin{lstlisting}
+SELECT r.fecha, u_est.nombre AS estudiante,
+       u_tut.nombre AS tutor, s.nombre AS servicio,
+       m.nombre AS materia, r.tokens_cobrados
+FROM reunion r
+JOIN usuario u_est ON r.id_estudiante = u_est.id_usuario
+JOIN usuario u_tut ON r.id_tutor = u_tut.id_usuario
+JOIN servicio s ON r.id_servicio = s.id_servicio
+JOIN materia m ON s.id_materia = m.id_materia
+WHERE r.estado = 'Finalizada'
+ORDER BY r.fecha DESC LIMIT 10;
+    \end{lstlisting}
+
+    \begin{block}{Punto tecnico}
+        5 tablas en JOIN. Misma tabla \texttt{usuario} referenciada 2 veces con alias. Las FK apuntan a los subtipos que heredan la PK de \texttt{usuario}.
+    \end{block}
+\end{frame}
+
+% ======================================================================
+% SECCION 4 --- P4: Demo consulta 2 (1.0 min)
+% ======================================================================
+\section{Demo 2: Window functions}
+
+\begin{frame}[fragile]{Consulta 2 --- Evolucion del flujo de tokens}
+    \textbf{Pregunta:} Como crece la economia de la plataforma?
+
+    \begin{lstlisting}
+SELECT DATE(fecha) AS fecha,
+       SUM(cantidad) AS balance_diario,
+       SUM(SUM(cantidad)) OVER (
+           ORDER BY DATE(fecha)
+       ) AS acumulado_historico
+FROM movimiento_token
+GROUP BY DATE(fecha)
+ORDER BY fecha ASC;
+    \end{lstlisting}
+
+    \begin{block}{Punto tecnico}
+        Window function \texttt{SUM() OVER (ORDER BY)} calcula el acumulado sin subconsultas. El GROUP BY colapsa por dia, y la window function opera sobre el resultado agregado.
+    \end{block}
+\end{frame}
+
+% ======================================================================
+% SECCION 5 --- P5: Optimizacion con EXPLAIN (1.5 min)
+% ======================================================================
+\section{Optimizacion con EXPLAIN}
+
+\begin{frame}[fragile]{EXPLAIN --- Antes del indice}
+    \begin{lstlisting}
+EXPLAIN SELECT * FROM reunion
+WHERE fecha BETWEEN '2025-01-01' AND '2025-03-31';
+    \end{lstlisting}
+    \begin{itemize}
+        \item \texttt{type: ALL} --- Full table scan
+        \item \texttt{rows: 1051} --- Todas las filas examinadas
+        \item \texttt{Extra: Using where}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{EXPLAIN --- Despues del indice}
+    \begin{lstlisting}
+CREATE INDEX idx_reunion_fecha ON reunion(fecha);
+EXPLAIN SELECT * FROM reunion
+WHERE fecha BETWEEN '2025-01-01' AND '2025-03-31';
+    \end{lstlisting}
+    \begin{itemize}
+        \item \texttt{type: range} --- Acceso por rango
+        \item \texttt{key: idx\_reunion\_fecha} --- Usa el indice
+        \item \texttt{rows: \textasciitilde200} --- Solo filas del rango
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Resultado cuantitativo}
+    \begin{table}
+        \begin{tabular}{lccc}
+            \toprule
+            \textbf{Metrica} & \textbf{Antes} & \textbf{Despues} & \textbf{Mejora} \\
+            \midrule
+            Tipo de acceso & ALL (full scan) & range (indice) & --- \\
+            Filas examinadas & $\sim$1051 & $\sim$200 & \textbf{5x menos} \\
+            \bottomrule
+        \end{tabular}
+    \end{table}
+    \textbf{Otros indices:} \texttt{usuario(email)} UNIQUE, \texttt{resena(id\_tutor)}, \texttt{movimiento\_token(id\_usuario, fecha)}
+\end{frame}
+
+% ======================================================================
+% SECCION 6 --- P6: Diferenciador tecnico (1.0 min)
+% ======================================================================
+\section{Diferenciador tecnico}
+
+\begin{frame}{Por que nuestra solucion es superior}
+    \begin{enumerate}
+        \item \textbf{Integridad en 3 capas}
+        \begin{itemize}
+            \item CHECK constraints $\rightarrow$ rechazan datos invalidos
+            \item Triggers $\rightarrow$ validan condiciones complejas
+            \item SPs $\rightarrow$ operaciones atomicas multi-tabla
+        \end{itemize}
+        \vspace{0.2cm}
+        \item \textbf{Automatizacion total}
+        \begin{itemize}
+            \item Calificacion y reembolsos: automaticos
+            \item Si alguien inserta por consola, la BD igual lo rechaza
+        \end{itemize}
+        \vspace{0.2cm}
+        \item \textbf{Sistema completo}
+        \begin{itemize}
+            \item 10 tablas, 7 triggers, 6 SPs, 5 vistas, 16 consultas
+            \item Backend Flask funcional (24/24 tests OK)
+            \item Frontend Bootstrap 5
+        \end{itemize}
+    \end{enumerate}
+\end{frame}
+
+\begin{frame}{Lo que aprendimos}
+    \begin{block}{Lecciones}
+        \begin{enumerate}
+            \item La BD es la \textbf{primera linea de defensa} de la integridad
+            \item Triggers y SPs mueven logica al motor = \textbf{mas eficiente y seguro}
+            \item Desnormalizar solo con \textbf{justificacion medible}
+            \item \texttt{EXPLAIN} no es opcional: \textbf{cada indice tiene metrica}
+            \item \texttt{@seed\_mode} permite \textbf{poblar datos historicos} sin disparar validaciones
+        \end{enumerate}
+    \end{block}
+    \vspace{0.5cm}
+    \centering
+    \Large Gracias! Preguntas?
+\end{frame}
+
+\end{document}

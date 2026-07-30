@@ -1,0 +1,309 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage[margin=1.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{xcolor}
+\usepackage{multicol}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small U-Linker --- Resumen del Proyecto}
+\fancyhead[R]{\small Bases de Datos}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.5pt}
+
+\setlength{\parskip}{0.3em}
+\setlength{\parindent}{0pt}
+\setlist{nosep,leftmargin=*}
+
+\title{\textbf{U-Linker --- Plataforma de Tutoria P2P}\\[0.3em]
+       \large Resumen completo para defensa y preguntas}
+\author{Equipo 6 personas · Division 2-2-2 (DB + Backend + Frontend)}
+\date{}
+
+\begin{document}
+\maketitle
+\thispagestyle{fancy}
+
+% ======================================================================
+\section{Que es U-Linker?}
+% ======================================================================
+Plataforma de tutoria entre pares universitarios con economia de tokens. Los estudiantes ganan 15 tokens al registrarse, pagan tutorias con tokens, y los tutores acumulan tokens e ingresos. El sistema automatiza validaciones, reembolsos y calificaciones directamente en la base de datos.
+
+\textbf{Numeros:} 10 tablas · 123 usuarios · 20 tutores · 15 materias · 30 servicios · 1051 reuniones · 80 resenas · 15 sanciones · 150+ movimientos de tokens · 15 FK · 6 CHECK · 5+ UNIQUE · 7 triggers · 6 SPs · 5 vistas · 16 consultas (N1--N6).
+
+% ======================================================================
+\section{Arquitectura del sistema}
+% ======================================================================
+\begin{multicols}{2}
+\textbf{Capa de datos (MySQL)}
+\begin{itemize}
+    \item 10 tablas en 3FN
+    \item 2 funciones almacenadas
+    \item 6 stored procedures
+    \item 7 triggers (con guarda @seed\_mode)
+    \item 5 vistas
+    \item 16 consultas analiticas (N1--N6)
+\end{itemize}
+
+\textbf{Backend (Flask + Python)}
+\begin{itemize}
+    \item Conexion via mysql.connector con pool
+    \item queries.py, connection.py, services/
+    \item Modelo User para autenticacion
+    \item 4 blueprints funcionales
+    \item 24/24 tests de integracion OK
+\end{itemize}
+
+\textbf{Frontend (Jinja2 + Bootstrap 5)}
+\begin{itemize}
+    \item base.html con navbar segun rol
+    \item auth: login, registro
+    \item servicios: buscar, detalle
+    \item reuniones, admin (backend listo)
+\end{itemize}
+\end{multicols}
+
+% ======================================================================
+\section{Esquema de la base de datos}
+% ======================================================================
+\begin{longtable}{llp{4cm}l}
+\toprule
+\textbf{Tabla} & \textbf{PK} & \textbf{Relaciones clave} & \textbf{Restricciones} \\
+\midrule
+\texttt{usuario} & id\_usuario & Padre de estudiante/tutor & UNIQUE(email) \\
+\texttt{estudiante} & id\_estudiante & FK a usuario, 1:1 & CASCADE \\
+\texttt{tutor} & id\_tutor & FK a usuario, 1:1 & CASCADE \\
+\texttt{materia} & id\_materia & Auto-FK (prerreq.) & UNIQUE(nombre), SET NULL \\
+\texttt{materia\_aprobada\_tutor} & id & FK a tutor, FK a materia & CHECK(nota $\geq$ 4.0), UNIQUE(tutor,materia) \\
+\texttt{servicio} & id\_servicio & FK a tutor, FK a materia & CHECK(precio $>$ 0) \\
+\texttt{reunion} & id\_reunion & FK a estudiante, tutor, servicio & CHECK(hora\_fin $>$ hora\_inicio), CHECK(estado) \\
+\texttt{resena} & id\_resena & FK a estudiante, tutor, materia & CHECK(calif 1--5), UNIQUE(est,tut,mat) \\
+\texttt{baneos} & id\_baneo & FK a usuario & CHECK(fecha\_fin $>$ fecha\_inicio) \\
+\texttt{movimiento\_token} & id\_mov. & FK a usuario & --- \\
+\bottomrule
+\end{longtable}
+
+\subsection{Jerarquia usuario--estudiante--tutor}
+\textbf{Estrategia:} Table-per-subtype. \texttt{usuario} tiene atributos comunes. \texttt{estudiante} y \texttt{tutor} heredan PK como FK 1:1. Un usuario puede ser \texttt{'Estudiante'}, \texttt{'Tutor'}, \texttt{'Ambos'} o \texttt{'admin'}. Las FK de otras tablas apuntan al subtipo correcto.
+
+\subsection{Desnormalizaciones justificadas}
+\begin{enumerate}
+    \item \texttt{usuario.saldo\_tokens}: mantenido por triggers/SPs. Evita recalcular desde \texttt{movimiento\_token} (auditoria).
+    \item \texttt{reunion.tokens\_cobrados}: snapshot historico del precio al momento de la reunion.
+\end{enumerate}
+
+\subsection{Auto-relacion en materia}
+\texttt{materia.id\_prerequisito} es FK a \texttt{materia.id\_materia} (ON DELETE SET NULL). Permite cadenas de prerrequisitos. Consultada con CTE recursiva en \texttt{sp\_materias\_con\_prerrequisitos}.
+
+% ======================================================================
+\section{Reglas de negocio (6 RN)}
+% ======================================================================
+\begin{enumerate}[leftmargin=*, label=\textbf{RN-\arabic*:}]
+    \item \textbf{Nota minima:} Solo nota $\geq$ 4.0 habilita ser tutor de una materia. \\ {\small CHECK + trg\_validar\_materia\_tutor}
+    \item \textbf{Resena unica:} Un estudiante solo resena a un tutor una vez por materia. \\ {\small UNIQUE(est, tut, mat) + CHECK 1--5}
+    \item \textbf{Saldo suficiente:} Para agendar, tokens $\geq$ precio del servicio. \\ {\small fn\_verificar\_saldo\_estudiante en SP + trg\_control\_saldo}
+    \item \textbf{Reembolso automatico:} Cancelacion $>$24h $\rightarrow$ devolucion de tokens. \\ {\small Trg\_reserva\_cancelada (AFTER UPDATE)}
+    \item \textbf{Baneos activos:} Usuario sancionado no agenda ni ofrece servicios. \\ {\small fn\_es\_usuario\_baneado + trg\_validar\_baneo\_reunion + trg\_validar\_baneo\_servicio}
+    \item \textbf{Calificacion automatica:} Promedio del tutor se recalcula con cada resena. \\ {\small Trg\_actualizar\_calificacion\_tutor (AFTER INSERT)}
+\end{enumerate}
+
+% ======================================================================
+\section{Catalogo de objetos DB}
+% ======================================================================
+\subsection{Funciones}
+\begin{longtable}{lp{5cm}p{5cm}}
+\toprule
+\textbf{Funcion} & \textbf{Parametros} & \textbf{Que hace} \\
+\midrule
+\texttt{fn\_verificar\_saldo\_estudiante} & id\_est, id\_serv & TRUE si saldo $\geq$ precio \\
+\texttt{fn\_es\_usuario\_baneado} & id\_usuario, fecha & TRUE si hay baneo activo \\
+\bottomrule
+\end{longtable}
+
+\subsection{Stored Procedures}
+\begin{longtable}{llp{6cm}}
+\toprule
+\textbf{SP} & \textbf{Params} & \textbf{Accion} \\
+\midrule
+\texttt{pr\_agendar\_tutoria} & est, tut, serv, fecha, hi, hf & Valida baneo+saldo, crea reunion, descuenta tokens (1 transaccion) \\
+\texttt{pr\_asignar\_datos\_usuario} & nombre, email, pass, area, sem & Crea usuario+estudiante+15 tokens (1 transaccion) \\
+\texttt{sp\_tutorias\_pendientes} & id\_usuario & Tutorias agendadas del usuario \\
+\texttt{sp\_tutores\_disponibles} & id\_materia & Tutores con materia aprobada, no baneados \\
+\texttt{sp\_ranking\_tutores} & --- & Ranking por calif\_promedio + tutorias \\
+\texttt{sp\_materias\_con\_prerrequisitos} & --- & CTE recursiva de prerrequisitos \\
+\bottomrule
+\end{longtable}
+
+\subsection{Triggers (7)}
+\begin{longtable}{llp{5cm}l}
+\toprule
+\textbf{Trigger} & \textbf{Evento} & \textbf{Accion} & \textbf{@seed\_mode} \\
+\midrule
+Trg\_actualizar\_calificacion\_tutor & AFTER INSERT resena & AVG $\rightarrow$ calif\_promedio & No \\
+Trg\_reserva\_cancelada & AFTER UPDATE reunion & Reembolso si $\geq$24h & No \\
+trg\_validar\_materia\_tutor & BEFORE INSERT mat\_aprob & Rechaza nota $<$ 4.0 & Si \\
+trg\_validar\_servicio & BEFORE INSERT servicio & Rechaza sin materia aprobada & Si \\
+trg\_validar\_baneo\_reunion & BEFORE INSERT reunion & Rechaza baneados & Si \\
+trg\_validar\_baneo\_servicio & BEFORE INSERT servicio & Rechaza tutor baneado & Si \\
+trg\_control\_saldo & BEFORE INSERT reunion & Rechaza sin saldo & Si \\
+\bottomrule
+\end{longtable}
+
+\subsection{Vistas (5)}
+\begin{longtable}{lp{7cm}}
+\toprule
+\textbf{Vista} & \textbf{Uso} \\
+\midrule
+\texttt{vw\_resumen\_estudiante} & Dashboard estudiante: saldo, total reuniones, resenas \\
+\texttt{vw\_desempeno\_tutores} & Dashboard admin: ranking, materias, servicios \\
+\texttt{vw\_dashboard\_general} & Metricas agrupadas por area \\
+\texttt{vw\_materias\_demandadas} & Materias mas solicitadas \\
+\texttt{vw\_perfil\_tutor} & Perfil publico del tutor \\
+\bottomrule
+\end{longtable}
+
+% ======================================================================
+\section{Backend: capa de datos y rutas}
+% ======================================================================
+\subsection{Blueprints y estado}
+\begin{longtable}{lll}
+\toprule
+\textbf{Blueprint} & \textbf{Rutas} & \textbf{Estado} \\
+\midrule
+\texttt{auth} & /login, /registro, /logout & Completo \\
+\texttt{servicios} & /buscar, /$<$id$>$, /$<$id$>$/agendar & Completo \\
+\texttt{reuniones} & /mis-reuniones, /$<$id$>$/cancelar, /finalizar, /resenar & Completo \\
+\texttt{admin} & /dashboard, /baneos, /baneos/crear, /levantar & Completo \\
+\texttt{usuario} & /dashboard, /perfil & Pendiente \\
+\texttt{tutor} & /postular, /mis-servicios & Pendiente \\
+\bottomrule
+\end{longtable}
+
+\subsection{Patron de conexion}
+\begin{verbatim}
+conn = get_db()
+try:
+    resultado = query(conn, params)
+finally:
+    close_db(conn)
+\end{verbatim}
+
+% ======================================================================
+\section{Orden de ejecucion de scripts}
+% ======================================================================
+\begin{enumerate}
+    \item \texttt{schema.sql} --- Crea tablas, constraints, indices
+    \item \texttt{funciones.sql} --- Crea funciones (requeridas por triggers y SPs)
+    \item \texttt{procedures.sql} --- Crea stored procedures
+    \item \texttt{triggers.sql} --- Crea triggers (con guarda @seed\_mode)
+    \item \texttt{Views.sql} --- Crea las 5 vistas
+    \item \texttt{seed.sql} --- Poblacion masiva (@seed\_mode = 1 durante la carga)
+\end{enumerate}
+
+\subsection{Mecanismo @seed\_mode}
+Los triggers de validacion (3-7) incluyen la guarda \texttt{IF @seed\_mode IS NULL OR @seed\_mode = 0 THEN}. El \texttt{seed.sql} ejecuta \texttt{SET @seed\_mode = 1} al inicio y \texttt{SET @seed\_mode = 0} al final. Esto permite insertar datos historicos que podrian violar temporalmente las reglas de negocio (ej: reuniones de usuarios baneados en fechas pasadas, o referencias a usuarios que aun no existen en el seed truncado). Los triggers 1 y 2 (calificacion y reembolso) no usan esta guarda porque su logica siempre debe ejecutarse.
+
+% ======================================================================
+\section{Indices y optimizacion}
+% ======================================================================
+\begin{longtable}{llp{7cm}}
+\toprule
+\textbf{Indice} & \textbf{Tabla} & \textbf{Justificacion} \\
+\midrule
+PRIMARY KEY & Todas & Automatico \\
+UNIQUE(email) & usuario & Acelera login \\
+UNIQUE(est,tut,mat) & resena & Evita duplicados \\
+UNIQUE(tutor,materia) & materia\_aprobada\_tutor & Evita duplicados \\
+FK indexes & Todas & MySQL crea por cada FK \\
+\texttt{idx\_reunion\_fecha} & reunion & 5x mejora en consultas por rango \\
+\bottomrule
+\end{longtable}
+
+\textbf{Caso EXPLAIN:} Consulta por rango de fecha en reunion: type ALL (1051 filas) $\rightarrow$ type range ($\sim$200 filas) con \texttt{idx\_reunion\_fecha}. Mejora de 5x.
+
+% ======================================================================
+\section{Flujo de operaciones clave}
+% ======================================================================
+\begin{description}
+    \item[Registro] POST /auth/registro $\rightarrow$ pr\_asignar\_datos\_usuario $\rightarrow$ usuario + estudiante + 15 tokens
+    \item[Agendar] POST /servicios/$<$id$>$/agendar $\rightarrow$ pr\_agendar\_tutoria $\rightarrow$ valida + crea + descuenta
+    \item[Cancelar] POST /reuniones/$<$id$>$/cancelar $\rightarrow$ UPDATE estado $\rightarrow$ Trg\_reserva\_cancelada reembolsa
+    \item[Resenar] POST /reuniones/$<$id$>$/resenar $\rightarrow$ INSERT + Trg\_actualizar\_calificacion\_tutor
+    \item[Baneo] POST /admin/baneos/crear $\rightarrow$ INSERT en baneos
+\end{description}
+
+% ======================================================================
+\section{Preguntas frecuentes esperadas}
+% ======================================================================
+
+\subsection{Por que table-per-subtype y no single-table?}
+Un usuario puede ser estudiante Y tutor (rol `Ambos'). Cada subtipo tiene atributos exclusivos. Las FK apuntan al subtipo correcto, dando integridad referencial mas precisa.
+
+\subsection{Por que no esta saldo\_tokens en 3FN?}
+Desnormalizacion deliberada por rendimiento. Cada transaccion actualiza el saldo inmediatamente. movimiento\_token actua como log de auditoria. Patron comun en billeteras virtuales.
+
+\subsection{Por que reunion guarda tokens\_cobrados si ya esta en servicio?}
+Snapshot historico. Si el tutor cambia el precio despues, la reunion conserva el valor del momento. Principio de inmutabilidad de transacciones.
+
+\subsection{Que pasa si alguien inserta datos invalidos directo en MySQL?}
+CHECK, UNIQUE, FK y triggers rechazan con SIGNAL SQLSTATE `45000'. La integridad esta en la BD, no en la aplicacion.
+
+\subsection{Como manejan las transacciones?}
+pr\_agendar\_tutoria y pr\_asignar\_datos\_usuario encapsulan multiples operaciones en un solo SP. Si algo falla, SIGNAL revierte todo. El backend captura mysql.connector.Error.
+
+\subsection{Por que triggers en vez de validar en el backend?}
+Defensa en profundidad. Si el backend tiene un bug, si alguien usa la consola MySQL, o durante migraciones --- los triggers igual protegen.
+
+\subsection{Como probaron que todo funciona?}
+\begin{itemize}
+    \item P2: Cada consulta N1--N6 ejecutada y verificada contra BD poblada
+    \item P3: test\_p3.py: 24 pruebas automatizadas, 24/24 OK
+    \item P4: Cada ruta probada manualmente con Flask corriendo
+\end{itemize}
+
+\subsection{Que es @seed\_mode?}
+Variable de sesion MySQL que desactiva los triggers de validacion durante la carga masiva de datos. Permite insertar datos historicos (con baneos, saldos inconsistentes, referencias a datos truncados) sin que los triggers los rechacen. Al terminar el seed, los triggers vuelven a estar activos para operaciones normales.
+
+% ======================================================================
+\section{Resumen rapido: datos clave}
+% ======================================================================
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{Concepto} & \textbf{Dato} \\
+\midrule
+Tablas & 10 \\
+Usuarios seed & 123 (20 tutores, 103 estudiantes) \\
+Materias & 15 (4 con prerrequisito) \\
+Servicios & 30 \\
+Reuniones & 1051 \\
+Resenas & 80 \\
+Baneos & 15 \\
+Funciones & 2 \\
+Stored procedures & 6 \\
+Triggers & 7 (4 con guarda @seed\_mode) \\
+Vistas & 5 \\
+Consultas analiticas & 16 (N1 $\rightarrow$ N6) \\
+Foreign Keys & 15 \\
+CHECK constraints & 6 \\
+UNIQUE constraints & 5+ \\
+Tests integracion & 24/24 OK \\
+Blueprints backend & 4 completos, 2 pendientes \\
+Estrategia jerarquia & Table-per-subtype \\
+Forma normal & 3FN con 2 desnormalizaciones \\
+Motor BD & MySQL (u\_linker) \\
+Backend & Flask + Python \\
+Frontend & Jinja2 + Bootstrap 5 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\end{document}

@@ -263,15 +263,28 @@ Todas estan en `backend.db.queries`. Reciben `conn` como primer parametro.
 
 ### Triggers (se disparan automaticamente)
 
-| Trigger | Evento | Que hace |
-|---------|--------|----------|
-| `Trg_actualizar_calificacion_tutor` | AFTER INSERT en resena | Recalcula calif_promedio del tutor |
-| `Trg_reserva_cancelada` | AFTER UPDATE en reunion (a Cancelada) | Si faltan >= 24h, reembolsa tokens al estudiante |
-| `trg_validar_materia_tutor` | BEFORE INSERT en materia_aprobada_tutor | Rechaza si nota < 4.0 |
-| `trg_validar_servicio` | BEFORE INSERT en servicio | Rechaza si el tutor no tiene la materia aprobada |
-| `trg_validar_baneo_reunion` | BEFORE INSERT en reunion | Rechaza si estudiante o tutor estan baneados |
-| `trg_validar_baneo_servicio` | BEFORE INSERT en servicio | Rechaza si el tutor esta baneado |
-| `trg_control_saldo` | BEFORE INSERT en reunion | Rechaza si el estudiante no tiene saldo suficiente |
+| Trigger | Evento | Que hace | Respeta seed_mode |
+|---------|--------|----------|:---:|
+| `Trg_actualizar_calificacion_tutor` | AFTER INSERT en resena | Recalcula calif_promedio del tutor | No |
+| `Trg_reserva_cancelada` | AFTER UPDATE en reunion (a Cancelada) | Si faltan >= 24h, reembolsa tokens al estudiante | No |
+| `trg_validar_materia_tutor` | BEFORE INSERT en materia_aprobada_tutor | Rechaza si nota < 4.0 | Si |
+| `trg_validar_servicio` | BEFORE INSERT en servicio | Rechaza si el tutor no tiene la materia aprobada | Si |
+| `trg_validar_baneo_reunion` | BEFORE INSERT en reunion | Rechaza si estudiante o tutor estan baneados | Si |
+| `trg_validar_baneo_servicio` | BEFORE INSERT en servicio | Rechaza si el tutor esta baneado | Si |
+| `trg_control_saldo` | BEFORE INSERT en reunion | Rechaza si el estudiante no tiene saldo suficiente | Si |
+
+> **Mecanismo `@seed_mode`:** Los triggers de validacion (4-7) se saltan cuando `@seed_mode = 1`. El seed.sql activa esta variable al inicio y la desactiva al final. Esto permite cargar datos historicos que podrian violar temporalmente las reglas (ej: reuniones de usuarios baneados, o usuarios que aun no existen en el seed truncado).
+
+### Orden correcto de ejecucion de scripts
+
+```
+1. schema.sql      — Crea tablas, constraints, indices
+2. funciones.sql   — Crea funciones (requeridas por triggers y SPs)
+3. procedures.sql  — Crea stored procedures
+4. triggers.sql    — Crea triggers (con guarda @seed_mode)
+5. Views.sql       — Crea las 5 vistas
+6. seed.sql        — Poblacion masiva (@seed_mode = 1 durante la carga)
+```
 
 ### Vistas
 

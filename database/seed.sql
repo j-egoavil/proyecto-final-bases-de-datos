@@ -6,6 +6,7 @@
 
 USE u_linker;
 SET FOREIGN_KEY_CHECKS = 0;
+SET @seed_mode = 1;  -- desactiva triggers de validacion durante la carga masiva
 
 -- =====================================================
 -- 1. MATERIAS (15 registros)
@@ -246,3 +247,4 @@ INSERT INTO movimiento_token (id_movimiento, id_usuario, cantidad, fecha) VALUES
 (15,117,-15,'2025-02-08 19:51:00');
 
 SET FOREIGN_KEY_CHECKS = 1;
+SET @seed_mode = 0;  -- reactiva triggers de validacion

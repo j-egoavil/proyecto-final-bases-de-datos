@@ -60,6 +60,7 @@ END$$
 DELIMITER ;
 
 -- Trigger 3 : Validamos que la materia solo se pueda ingresar con nota suficiente
+--         Se salta durante poblacion (@seed_mode = 1)
 USE u_linker;
 
 DELIMITER $$
@@ -68,15 +69,17 @@ CREATE TRIGGER trg_validar_materia_tutor
 BEFORE INSERT ON materia_aprobada_tutor
 FOR EACH ROW
 BEGIN
-    IF new.nota < 4.0 THEN 
-		SIGNAL SQLSTATE '45000' 
-        SET MESSAGE_TEXT = 'No se puede ser tutor de una materia si la nota es menor a 4.0';
-    END IF;    
-    
+    IF @seed_mode IS NULL OR @seed_mode = 0 THEN
+        IF new.nota < 4.0 THEN 
+            SIGNAL SQLSTATE '45000' 
+            SET MESSAGE_TEXT = 'No se puede ser tutor de una materia si la nota es menor a 4.0';
+        END IF;
+    END IF;
 END$$
 DELIMITER ;
 
--- Trigger 4 : Valida que el tutor si tenga inscrita esa materia como aprobada y apta 
+-- Trigger 4 : Valida que el tutor si tenga inscrita esa materia como aprobada y apta
+--         Se salta durante poblacion (@seed_mode = 1)
 USE u_linker;
 
 DELIMITER $$
@@ -87,23 +90,26 @@ CREATE TRIGGER trg_validar_servicio
 BEFORE INSERT ON servicio
 FOR EACH ROW
 BEGIN
-    DECLARE v_existe INT;
+    DECLARE v_existe INT DEFAULT 0;
 
-    SELECT COUNT(*)
-    INTO v_existe
-    FROM materia_aprobada_tutor
-    WHERE id_tutor = NEW.id_tutor -- cuenta si coinciden las materias y los tutores 
-      AND id_materia = NEW.id_materia;
+    IF @seed_mode IS NULL OR @seed_mode = 0 THEN
+        SELECT COUNT(*)
+        INTO v_existe
+        FROM materia_aprobada_tutor
+        WHERE id_tutor = NEW.id_tutor
+          AND id_materia = NEW.id_materia;
 
-    IF v_existe = 0 THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'El tutor no tiene registrada esa materia como aprobada.';
+        IF v_existe = 0 THEN
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'El tutor no tiene registrada esa materia como aprobada.';
+        END IF;
     END IF;
 END $$
 
 DELIMITER ;
 
 -- Trigger 5: trg_validar_baneo_reunion (RN-05 a nivel de tabla, redundante con pr_agendar_tutoria)
+--         Se salta durante poblacion (@seed_mode = 1)
 USE u_linker;
 
 DELIMITER $$
@@ -114,20 +120,23 @@ CREATE TRIGGER trg_validar_baneo_reunion
 BEFORE INSERT ON reunion
 FOR EACH ROW
 BEGIN
-    IF u_linker.fn_es_usuario_baneado(NEW.id_estudiante, NEW.fecha) THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'El estudiante tiene una sancion activa en la fecha seleccionada.';
-    END IF;
+    IF @seed_mode IS NULL OR @seed_mode = 0 THEN
+        IF u_linker.fn_es_usuario_baneado(NEW.id_estudiante, NEW.fecha) THEN
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'El estudiante tiene una sancion activa en la fecha seleccionada.';
+        END IF;
 
-    IF u_linker.fn_es_usuario_baneado(NEW.id_tutor, NEW.fecha) THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'El tutor tiene una sancion activa en la fecha seleccionada.';
+        IF u_linker.fn_es_usuario_baneado(NEW.id_tutor, NEW.fecha) THEN
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'El tutor tiene una sancion activa en la fecha seleccionada.';
+        END IF;
     END IF;
 END$$
 
 DELIMITER ;
 
 -- Trigger 6: trg_validar_baneo_servicio (RN-05 a nivel de tabla, mismo caso de redundancia)
+--         Se salta durante poblacion (@seed_mode = 1)
 USE u_linker;
 
 DELIMITER $$
@@ -138,15 +147,18 @@ CREATE TRIGGER trg_validar_baneo_servicio
 BEFORE INSERT ON servicio
 FOR EACH ROW
 BEGIN
-    IF u_linker.fn_es_usuario_baneado(NEW.id_tutor, CURDATE()) THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'El tutor tiene una sancion activa y no puede publicar servicios.';
+    IF @seed_mode IS NULL OR @seed_mode = 0 THEN
+        IF u_linker.fn_es_usuario_baneado(NEW.id_tutor, CURDATE()) THEN
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'El tutor tiene una sancion activa y no puede publicar servicios.';
+        END IF;
     END IF;
 END$$
 
 DELIMITER ;
 
 -- Trigger 7: trg_control_saldo (RN-03 a nivel de tabla, redundante con pr_agendar_tutoria)
+--         Se salta durante poblacion (@seed_mode = 1)
 USE u_linker;
 
 DELIMITER $$
@@ -157,9 +169,11 @@ CREATE TRIGGER trg_control_saldo
 BEFORE INSERT ON reunion
 FOR EACH ROW
 BEGIN
-    IF NOT u_linker.fn_verificar_saldo_estudiante(NEW.id_estudiante, NEW.id_servicio) THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'El estudiante no tiene suficientes tokens para este servicio.';
+    IF @seed_mode IS NULL OR @seed_mode = 0 THEN
+        IF NOT u_linker.fn_verificar_saldo_estudiante(NEW.id_estudiante, NEW.id_servicio) THEN
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'El estudiante no tiene suficientes tokens para este servicio.';
+        END IF;
     END IF;
 END$$
 
